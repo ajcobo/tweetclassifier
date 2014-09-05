@@ -4,7 +4,10 @@ from sklearn_pandas import DataFrameMapper
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import FeatureUnion
+from sklearn.naive_bayes import MultinomialNB
 from sklearn import svm
+from sklearn import metrics
+from sklearn import preprocessing
 import nltk
 from nltk.corpus import stopwords
 from nltk import word_tokenize
@@ -33,6 +36,32 @@ def process_text(text, stem=True):
 
   return tokens
 
+def train(model, dataset):
+  #Test and Training
+  X, y = dataset
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+  #Text vectorization using text processing
+  vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+  #tmp = pa.DataFrame.as_matrix(X_train)
+
+  #Learn vocabulary and idf, return term-document matrix.
+  #Extracting features from the training dataset using a sparse vectorizer
+  X_train_vectorized = vectorizer.fit_transform(X_train)
+  #Transform documents to document-term matrix.
+  #Extracting features from the test dataset using the same vectorizer
+  X_test_vectorized = vectorizer.transform(X_test)
+
+  resulting_model = model.fit(X_train_vectorized,y_train)
+  #a.score(X_test_d,y_test)
+  prediction = resulting_model.predict(X_test_vectorized)
+  score = metrics.f1_score(y_test, prediction)
+  print(vectorizer.get_feature_names())
+  print(vectorizer.idf_)
+  print(score)
+  #print(prediction)
+
+#Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
 dataset = DataFrameMapper(raw_data)
 
@@ -49,23 +78,14 @@ columns_feature_2 = ['texto', 'followers_count', 'friends_count']
 columns_feature_3 = ['texto', 'time_gap', 'friends_count']
 columns_feature_4 = ['texto', 'time_gap', 'followers_count']
 
-feature_1_data, feature_1_target = dataset.features[columns_feature_1], dataset.features['value']
-feature_2_data, feature_2_target = dataset.features[columns_feature_2], dataset.features['value']
-feature_3_data, feature_3_target = dataset.features[columns_feature_3], dataset.features['value']
-feature_4_data, feature_4_target = dataset.features[columns_feature_4], dataset.features['value']
-feature_5_data, feature_5_target = dataset.features['texto'], dataset.features['value']
+feature_1 = [dataset.features[columns_feature_1], dataset.features['value']]
+feature_2 = [dataset.features[columns_feature_2], dataset.features['value']]
+feature_3 = [dataset.features[columns_feature_3], dataset.features['value']]
+feature_4 = [dataset.features[columns_feature_4]['texto'], dataset.features['value']]
+feature_5 = [dataset.features['texto'], dataset.features['value']]
 
-#Test and Training
-X_train, X_test, y_train, y_test = train_test_split(feature_5_data, feature_5_target, test_size=0.2)
+test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta este arreglo'], np.array([False, True, True], dtype=bool)]
 
-#Text vectorization using text processing
-vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
-#tmp = pa.DataFrame.as_matrix(X_train)
-
-X_train = vectorizer.fit_transform(X_train)
-y_train = vectorizer.fit_transform(y_train)
-
-
-
-a = svm.SVC().fit(X_train,y_train)
-a.score(X_test,y_test)
+train(svm.SVC(), test_feature)
+train(svm.SVC(kernel='linear'), feature_5)
+train(MultinomialNB(), feature_5)
