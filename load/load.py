@@ -133,6 +133,8 @@ def train(model, dataset):
     print(len(vectorizer.idf_))
     print(score)
     #print(prediction)
+    prfs = metrics.precision_recall_fscore_support(y_test, prediction)
+    print(prfs)
 
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
