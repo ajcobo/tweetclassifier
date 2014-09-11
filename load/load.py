@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pa
 from sklearn_pandas import DataFrameMapper
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import train_test_split, LeavePOut
 from sklearn.pipeline import FeatureUnion
 from sklearn.naive_bayes import MultinomialNB
 from sklearn import svm
 from sklearn import metrics
 from sklearn import preprocessing
+from sklearn.utils import check_arrays
 import nltk
 from nltk.corpus import stopwords
 from nltk import word_tokenize, sent_tokenize
@@ -16,7 +17,12 @@ import datetime
 from pprint import pprint
 import string
 
+#Regexp
 import re
+
+#Plots
+import matplotlib.pyplot as plt
+
 #tokenizer http://sentiment.christopherpotts.net/code-data/happyfuntokenizing.py
 emoticon_string = r"""
     (?:
@@ -106,10 +112,30 @@ def process_text(text, stem=True, remove_links=True, punctuation_exception='#@')
 
     return tokens
 
+def plot_roc(test, score):
+    #ROC curve and ROC area
+    fpr, tpr, _ = metrics.roc_curve(test, score)
+    roc_auc = metrics.auc(fpr, tpr)
+
+    # Plot of a ROC curve
+    plt.figure()
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
 def train(model, dataset):
     #Test and Training
     X, y = dataset
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    check_arrays(X,y)
+
+    X_train, X_test, y_train, y_test
 
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
@@ -128,13 +154,14 @@ def train(model, dataset):
     score = metrics.f1_score(y_test, prediction)
 
     # Output
-    print(vectorizer.get_feature_names())
-    print(vectorizer.idf_)
-    print(len(vectorizer.idf_))
-    print(score)
+    # print(vectorizer.get_feature_names())
+    # print(vectorizer.idf_)
+    # print(len(vectorizer.idf_))
+    # print(score)
     #print(prediction)
-    prfs = metrics.precision_recall_fscore_support(y_test, prediction)
+    prfs = metrics.classification_report(y_test, prediction)
     print(prfs)
+    plot_roc(y_test, resulting_model.decision_function(X_test_vectorized))
 
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
@@ -143,6 +170,9 @@ dataset = DataFrameMapper(raw_data)
 times = pa.to_datetime(raw_data.date +" "+raw_data.time)
 earthquake_time = datetime.datetime(2010, 2, 27, 3,34,8)
 time_gap = times - earthquake_time
+
+#order by date
+dataset.features = dataset.features.sort(['date', 'time'])
 
 #Add time_gap for the features
 dataset.features['time_gap'] = time_gap
@@ -161,6 +191,6 @@ feature_5 = [dataset.features['texto'], dataset.features['value']]
 
 test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta este arreglo'], np.array([False, True, True], dtype=bool)]
 
-train(svm.SVC(), test_feature)
-train(svm.SVC(kernel='linear'), feature_5)
+#train(svm.SVC(), test_feature)
+train(svm.LinearSVC(), feature_5)
 train(MultinomialNB(), feature_5)
