@@ -129,13 +129,16 @@ def plot_roc(test, score):
     plt.legend(loc="lower right")
     plt.show()
 
-def train(model, dataset):
+def split_dataset(dataset):
     #Test and Training
     X, y = dataset
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     check_arrays(X,y)
+    train_length = int(len(X)*0.8)
+    return(X[:train_length], X[train_length:], y[:train_length], y[train_length:])
 
-    X_train, X_test, y_train, y_test
+def train_text(model, dataset):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
 
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
@@ -163,6 +166,23 @@ def train(model, dataset):
     print(prfs)
     plot_roc(y_test, resulting_model.decision_function(X_test_vectorized))
 
+def train_notext(model, dataset):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+    resulting_model = model.fit(X_train, y_train)
+    
+    prediction = resulting_model.predict(X_test)
+    score = metrics.f1_score(y_test, prediction)
+
+    # Output
+    # print(vectorizer.get_feature_names())
+    # print(vectorizer.idf_)
+    # print(len(vectorizer.idf_))
+    # print(score)
+    #print(prediction)
+    prfs = metrics.classification_report(y_test, prediction)
+    print(prfs)
+    plot_roc(y_test, resulting_model.decision_function(X_test))
+
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
 dataset = DataFrameMapper(raw_data)
@@ -182,15 +202,19 @@ columns_feature_1 = ['texto', 'time_gap', 'followers_count', 'friends_count']
 columns_feature_2 = ['texto', 'followers_count', 'friends_count']
 columns_feature_3 = ['texto', 'time_gap', 'friends_count']
 columns_feature_4 = ['texto', 'time_gap', 'followers_count']
+columns_feature_5 = ['time_gap', 'followers_count', 'friends_count']
 
 feature_1 = [dataset.features[columns_feature_1], dataset.features['value']]
 feature_2 = [dataset.features[columns_feature_2], dataset.features['value']]
 feature_3 = [dataset.features[columns_feature_3], dataset.features['value']]
 feature_4 = [dataset.features[columns_feature_4]['texto'], dataset.features['value']]
-feature_5 = [dataset.features['texto'], dataset.features['value']]
+total_text = [dataset.features['texto'], dataset.features['value']]
+total_notext = [dataset.features[columns_feature_5], dataset.features['value']]
 
 test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta este arreglo'], np.array([False, True, True], dtype=bool)]
 
 #train(svm.SVC(), test_feature)
-train(svm.LinearSVC(), feature_5)
-train(MultinomialNB(), feature_5)
+train_text(svm.LinearSVC(), total_text)
+train_text(MultinomialNB(), total_text)
+train_notext(svm.LinearSVC(), total_notext)
+train_text(MultinomialNB(), total_notext)
