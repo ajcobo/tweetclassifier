@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.cross_validation import train_test_split, LeavePOut
 from sklearn.pipeline import FeatureUnion
 from sklearn.naive_bayes import MultinomialNB
-from sklearn import svm
+from sklearn import svm, ensemble
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.utils import check_arrays
@@ -129,6 +129,18 @@ def plot_roc(test, score):
     plt.legend(loc="lower right")
     plt.show()
 
+def predict_scores(model, X_test):
+    if hasattr(model, "decision_function"):
+        if (model.__class__.__name__ == 'RandomForestClassifier'):
+            return model.decision_function(X_test)[:,1]
+        else:
+            return model.decision_function(X_test).astype('float')
+    else:
+        if (model.__class__.__name__ == 'RandomForestClassifier'):
+            return model.predict_proba(X_test)[:,1]
+        else:
+            return model.predict_proba(X_test)
+
 def split_dataset(dataset):
     #Test and Training
     X, y = dataset
@@ -164,7 +176,7 @@ def train_text(model, dataset):
     #print(prediction)
     prfs = metrics.classification_report(y_test, prediction)
     print(prfs)
-    plot_roc(y_test, resulting_model.decision_function(X_test_vectorized))
+    plot_roc(y_test, predict_scores(resulting_model, X_test_vectorized))
 
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -181,7 +193,7 @@ def train_notext(model, dataset):
     #print(prediction)
     prfs = metrics.classification_report(y_test, prediction)
     print(prfs)
-    plot_roc(y_test, resulting_model.decision_function(X_test))
+    plot_roc(y_test, predict_scores(resulting_model, X_test))
 
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
@@ -215,6 +227,8 @@ test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta 
 
 #train(svm.SVC(), test_feature)
 train_text(svm.LinearSVC(), total_text)
-train_text(MultinomialNB(), total_text)
+#train_text(MultinomialNB(), total_text)
+train_notext(ensemble.RandomForestClassifier(), total_notext)
 train_notext(svm.LinearSVC(), total_notext)
-train_text(MultinomialNB(), total_notext)
+train_text(ensemble.RandomForestClassifier(), total_text)
+#train_notext(MultinomialNB(), total_notext)
