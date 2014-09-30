@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pa
+import sklearn
 from sklearn_pandas import DataFrameMapper
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.cross_validation import train_test_split, LeavePOut
 from sklearn.pipeline import FeatureUnion
 from sklearn.naive_bayes import MultinomialNB
 from sklearn import svm, ensemble
-from sklearn import metrics
+from sklearn import metrics, cross_validation
 from sklearn import preprocessing
 from sklearn.utils import check_arrays
 import nltk
@@ -147,7 +148,25 @@ def split_dataset(dataset):
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     check_arrays(X,y)
     train_length = int(len(X)*0.8)
-    return(X[:train_length], X[train_length:], y[:train_length], y[train_length:])
+    return(np.array(X[:train_length]), np.array(X[train_length:]), np.array(y[:train_length]), np.array(y[train_length:]))
+
+def custom_cross_val_score(model, X, y, kfolds):
+    cm = np.zeros(len(np.unique(y)) ** 2)
+    for i, (train, test) in enumerate(kfolds):
+        model.fit(X[train], y[train])
+        y_pred = model.predict(X[test])
+        cm +=  metrics.confusion_matrix(y[test], y_pred).flatten()
+        print(metrics.classification_report(y[test], y_pred))
+        print(cm)
+        print(compute_measures(*cm / kfolds.n_folds))
+    return compute_measures(*cm / kfolds.n_folds)
+
+def compute_measures(tp, fp, fn, tn):
+     """Computes effectiveness measures given a confusion matrix."""
+     specificity = tn / (tn + fp)
+     sensitivity = tp / (tp + fn)
+     fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
+     return sensitivity, specificity, fmeasure
 
 def train_text(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -195,6 +214,13 @@ def train_notext(model, dataset):
     print(prfs)
     plot_roc(y_test, predict_scores(resulting_model, X_test))
 
+def cross_val_train(model, dataset, nfolds, scoring):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+    #scores = cross_validation.cross_val_score(model, X_train, y_train, cv = folds, score_func=scoring)
+    kf = cross_validation.KFold(len(X_train), nfolds)
+    scores = custom_cross_val_score(model, X_train, y_train, kf)
+    print(scores)
+
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
 dataset = DataFrameMapper(raw_data)
@@ -225,10 +251,13 @@ total_notext = [dataset.features[columns_feature_5], dataset.features['value']]
 
 test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta este arreglo'], np.array([False, True, True], dtype=bool)]
 
-#train(svm.SVC(), test_feature)
-train_text(svm.LinearSVC(), total_text)
-#train_text(MultinomialNB(), total_text)
-train_notext(ensemble.RandomForestClassifier(), total_notext)
-train_notext(svm.LinearSVC(), total_notext)
-train_text(ensemble.RandomForestClassifier(), total_text)
-#train_notext(MultinomialNB(), total_notext)
+# #train(svm.SVC(), test_feature)
+# train_text(svm.LinearSVC(), total_text)
+# #train_text(MultinomialNB(), total_text)
+# train_notext(ensemble.RandomForestClassifier(), total_notext)
+# train_notext(svm.LinearSVC(), total_notext)
+# train_text(ensemble.RandomForestClassifier(), total_text)
+# #train_notext(MultinomialNB(), total_notext)
+
+# Cross Validation
+cross_val_train(svm.LinearSVC(), total_notext, 5, metrics.classification_report)
