@@ -10,6 +10,7 @@ from sklearn import svm, ensemble
 from sklearn import metrics, cross_validation
 from sklearn import preprocessing
 from sklearn.utils import check_arrays
+from sklearn.decomposition import PCA
 import nltk
 from nltk.corpus import stopwords
 from nltk import word_tokenize, sent_tokenize
@@ -23,6 +24,7 @@ import re
 
 #Plots
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 #tokenizer http://sentiment.christopherpotts.net/code-data/happyfuntokenizing.py
 emoticon_string = r"""
@@ -151,22 +153,28 @@ def split_dataset(dataset):
     return(np.array(X[:train_length]), np.array(X[train_length:]), np.array(y[:train_length]), np.array(y[train_length:]))
 
 def custom_cross_val_score(model, X, y, kfolds):
+    
     cm = np.zeros(len(np.unique(y)) ** 2)
     for i, (train, test) in enumerate(kfolds):
         model.fit(X[train], y[train])
         y_pred = model.predict(X[test])
         cm +=  metrics.confusion_matrix(y[test], y_pred).flatten()
-        print(metrics.classification_report(y[test], y_pred))
-        print(cm)
-        print(compute_measures(*cm / kfolds.n_folds))
-    return compute_measures(*cm / kfolds.n_folds)
+        report = metrics.classification_report(y[test], y_pred)
+        print(report)
+    return compute_measures(*cm / kfolds.n_folds), compute_negative_measures(*cm / kfolds.n_folds)
 
 def compute_measures(tp, fp, fn, tn):
      """Computes effectiveness measures given a confusion matrix."""
      specificity = tn / (tn + fp)
      sensitivity = tp / (tp + fn)
      fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
-     return sensitivity, specificity, fmeasure
+     return specificity, sensitivity, fmeasure
+
+def compute_negative_measures(tp, fp, fn, tn):
+     specificity = tp / (tp + fn)
+     sensitivity = tn / (tn + fp)
+     fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
+     return specificity, sensitivity, fmeasure
 
 def train_text(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -197,12 +205,45 @@ def train_text(model, dataset):
     print(prfs)
     plot_roc(y_test, predict_scores(resulting_model, X_test_vectorized))
 
+def train_text_pca(model, dataset, n_components = 100):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+    #tmp = pa.DataFrame.as_matrix(X_train)
+
+    #Learn vocabulary and idf, return term-document matrix.
+    #Extracting features from the training dataset using a sparse vectorizer
+    X_train_vectorized = vectorizer.fit_transform(X_train).toarray()
+    pca = PCA(n_components)
+    fit_model = pca.fit(X_train_vectorized)
+    X_train_vectorized = fit_model.transform(X_train_vectorized)
+    #Transform documents to document-term matrix.
+    #Extracting features from the test dataset using the same vectorizer
+    X_test_vectorized = vectorizer.transform(X_test).toarray()
+    X_test_vectorized = fit_model.transform(X_test_vectorized)
+
+    resulting_model = model.fit(X_train_vectorized,y_train)
+    #a.score(X_test_d,y_test)
+    prediction = resulting_model.predict(X_test_vectorized)
+    score = metrics.f1_score(y_test, prediction)
+
+    # Output
+    # print(vectorizer.get_feature_names())
+    # print(vectorizer.idf_)
+    # print(len(vectorizer.idf_))
+    # print(score)
+    #print(prediction)
+    prfs = metrics.classification_report(y_test, prediction)
+    print(prfs)
+    plot_roc(y_test, predict_scores(resulting_model, X_test_vectorized))
+
+
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     resulting_model = model.fit(X_train, y_train)
     
     prediction = resulting_model.predict(X_test)
-    score = metrics.f1_score(y_test, prediction)
 
     # Output
     # print(vectorizer.get_feature_names())
@@ -218,9 +259,10 @@ def cross_val_train(model, dataset, nfolds, scoring):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     #scores = cross_validation.cross_val_score(model, X_train, y_train, cv = folds, score_func=scoring)
     kf = cross_validation.KFold(len(X_train), nfolds)
-    scores = custom_cross_val_score(model, X_train, y_train, kf)
-    print(scores)
-
+    true_scores, false_scores = custom_cross_val_score(model, X_train, y_train, kf)
+    #print(cross_validation.cross_val_score(model, X_train,y_train,cv=kf,scoring='accuracy'))
+    result = np.array([true_scores, false_scores], dtype = [('precision', 'float'), ('recall', 'float'), ('fscore', 'float')])
+    print(tabulate(result, headers = result.dtype.names))
 #Execute
 raw_data = pa.read_csv("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv")
 dataset = DataFrameMapper(raw_data)
@@ -260,4 +302,6 @@ test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta 
 # #train_notext(MultinomialNB(), total_notext)
 
 # Cross Validation
-cross_val_train(svm.LinearSVC(), total_notext, 5, metrics.classification_report)
+#cross_val_train(svm.LinearSVC(), total_notext, 5, metrics.classification_report)
+
+train_text_pca(ensemble.RandomForestClassifier(), total_text, 50)
