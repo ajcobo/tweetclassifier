@@ -15,19 +15,19 @@ columns_feature_3 = ['texto', 'time_gap', 'friends_count']
 columns_feature_4 = ['texto', 'time_gap', 'followers_count']
 columns_feature_5 = ['time_gap', 'followers_count', 'friends_count']
 
-feature_1 = [dataset.features[columns_feature_1], dataset.features['value']]
-feature_2 = [dataset.features[columns_feature_2], dataset.features['value']]
-feature_3 = [dataset.features[columns_feature_3], dataset.features['value']]
-feature_4 = [dataset.features[columns_feature_4]['texto'], dataset.features['value']]
-total_text = [dataset.features['texto'], dataset.features['value']]
-total_notext = [dataset.features[columns_feature_5], dataset.features['value']]
+feature_1 = [dataset.features[columns_feature_1].values, dataset.features['value'].values]
+feature_2 = [dataset.features[columns_feature_2].values, dataset.features['value'].values]
+feature_3 = [dataset.features[columns_feature_3].values, dataset.features['value'].values]
+feature_4 = [dataset.features[columns_feature_4]['texto'].values, dataset.features['value'].values]
+total_text = [dataset.features['texto'].values, dataset.features['value'].values]
+total_notext = [dataset.features[columns_feature_5].values, dataset.features['value'].values]
 
 test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta este arreglo'], np.array([False, True, True], dtype=bool)]
 
 # Perform analysis
 
 # #train(svm.SVC(), test_feature)
-# train_text(svm.LinearSVC(), total_text)
+#train_text(svm.LinearSVC(), total_text)
 # #train_text(MultinomialNB(), total_text)
 # train_notext(ensemble.RandomForestClassifier(), total_notext)
 # train_notext(svm.LinearSVC(), total_notext)
@@ -38,7 +38,16 @@ test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta 
 #cross_val_train(svm.LinearSVC(), total_notext, 5, metrics.classification_report)
 
 #PCA
-train_text_pca(ensemble.RandomForestClassifier(), total_text, 50)
+#train_text_pca(ensemble.RandomForestClassifier(), total_text, 100)
+#train_text_pca(svm.LinearSVC(), total_text, 100)
 
 #LSA
-train_text_pca(ensemble.RandomForestClassifier(), total_text, 100)
+#train_text_lsa(ensemble.RandomForestClassifier(), total_text, 100)
+
+#Grid Search
+parameters =  dict(features__text__reduce_dim__n_components=[100, 200])
+#estimators = [('TruncatedSVD', TruncatedSVD()), ('main', total_notext)]
+#parameters = dict(reduce_dim__n_components=[10, 20, 50, 100 ,200, 500])
+#grid_search_lsa(svm.LinearSVC(), feature_1, parameters)
+#grid_search_lsa(ensemble.RandomForestClassifier(), feature_1, parameters)
+grid_search_with_param(svm.SVC(), feature_1, parameters)

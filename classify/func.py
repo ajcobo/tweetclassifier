@@ -1,14 +1,13 @@
 from plot import *
-
+from util import *
 import numpy as np
 import pandas as pa
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.cross_validation import train_test_split, LeavePOut
-from sklearn.pipeline import FeatureUnion
+from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.naive_bayes import MultinomialNB
-from sklearn import metrics, cross_validation
-from sklearn import preprocessing
+from sklearn import metrics, cross_validation, grid_search, preprocessing
 from sklearn.utils import check_arrays
 from sklearn.decomposition import PCA, TruncatedSVD
 from nltk.corpus import stopwords
@@ -92,7 +91,7 @@ def split_dataset(dataset):
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     check_arrays(X,y)
     train_length = int(len(X)*0.8)
-    return(np.array(X[:train_length]), np.array(X[train_length:]), np.array(y[:train_length]), np.array(y[train_length:]))
+    return(X[:train_length], X[train_length:], y[:train_length], y[train_length:])
 
 # http://bogdan-ivanov.com/entry/recipe-text-clustering-using-nltk-and-scikit-learn/
 # Used to tokenize when constucting the vectorizer
@@ -138,7 +137,7 @@ def train_text(model, dataset):
     prediction = resulting_model.predict(X_test_vectorized)
 
     # Output
-    print_report(X_test, y_test, resulting_model, prediction)
+    print_report(X_test_vectorized, y_test, resulting_model, prediction)
 
 def train_text_pca(model, dataset, n_components = 100):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -148,7 +147,7 @@ def train_text_pca(model, dataset, n_components = 100):
 
     #Learn vocabulary and idf, return term-document matrix.
     #Extracting features from the training dataset using a sparse vectorizer
-    X_train_vectorized = vectorizer.fit_transform(X_train).toarray()
+    X_train_vectorized = vectorizer.fit_transform(X_train)
     pca = PCA(n_components)
     fit_model = pca.fit(X_train_vectorized)
     X_train_vectorized = fit_model.transform(X_train_vectorized)
@@ -185,6 +184,74 @@ def train_text_lsa(model, dataset, n_components = 100):
 
     # Output
     print_report(X_test_vectorized, y_test, resulting_model, prediction)
+
+def grid_search_lsa(model, dataset, parameters):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    text_clf = Pipeline([('extract', ColumnExtractor([...,0])),
+                         ('vectorizer', vectorizer),
+                         ('reduce_dim', TruncatedSVD()),
+                         ('clf', model)])
+
+    # n_jobs = -1 just in executable
+    gs = grid_search.GridSearchCV(text_clf, parameters)
+
+    resulting_model = gs.fit(X_train,y_train)
+    prediction = resulting_model.predict(X_test)
+
+    # Output
+    print(resulting_model.best_params_)
+    print(metrics.classification_report(y_test, prediction))
+    # print_report(X_test, y_test, resulting_model, prediction)
+
+def grid_search_pca(model, dataset, parameters):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    text_clf = Pipeline([('vectorizer', vectorizer),
+                         ('reduce_dim', PCA()),
+                         ('clf', model)])
+
+    # n_jobs = -1 just in executable
+    gs = grid_search.GridSearchCV(text_clf, parameters)
+    
+    resulting_model = gs.fit(X_train,y_train)
+    prediction = resulting_model.predict(X_test)
+
+    # Output
+    print(resulting_model.best_params_)
+    print(metrics.classification_report(y_test, prediction))
+    # print_report(X_test, y_test, resulting_model, prediction)
+
+def grid_search_with_param(model, dataset, parameters):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    text_clf = Pipeline([('features', FeatureUnion([
+                            ('text', Pipeline([
+                                ('extract', ColumnExtractor([...,0])),
+                                ('vectorize', vectorizer),
+                                ('reduce_dim', TruncatedSVD(n_components = 100))
+                            ])),
+                            ('no_text', Pipeline([
+                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                            ]))
+                        ])),
+                        ('classifier', model)])
+
+    gs = grid_search.GridSearchCV(text_clf, parameters)
+    resulting_model = gs.fit(X_train,y_train)
+    prediction = resulting_model.predict(X_test)
+
+    # Output
+    print(resulting_model.best_params_)
+    print(metrics.classification_report(y_test, prediction))
 
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
