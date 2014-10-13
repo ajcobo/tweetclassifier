@@ -185,7 +185,7 @@ def train_text_lsa(model, dataset, n_components = 100):
     # Output
     print_report(X_test_vectorized, y_test, resulting_model, prediction)
 
-def grid_search_lsa(model, dataset, parameters):
+def grid_search_lsa(model, dataset, parameters, description=""):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
 
     #Text vectorization using text processing
@@ -205,7 +205,7 @@ def grid_search_lsa(model, dataset, parameters):
     # Output
     print(resulting_model.best_params_)
     print(metrics.classification_report(y_test, prediction))
-    # print_report(X_test, y_test, resulting_model, prediction)
+    print_report(X_test, y_test, resulting_model, prediction)
 
 def grid_search_pca(model, dataset, parameters):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -237,7 +237,7 @@ def grid_search_with_param(model, dataset, parameters):
                             ('text', Pipeline([
                                 ('extract', ColumnExtractor([...,0])),
                                 ('vectorize', vectorizer),
-                                ('reduce_dim', TruncatedSVD(n_components = 100))
+                                ('reduce_dim', TruncatedSVD())
                             ])),
                             ('no_text', Pipeline([
                                 ('extract', ColumnExtractor([...,slice(1,None,None)]))
@@ -253,13 +253,39 @@ def grid_search_with_param(model, dataset, parameters):
     print(resulting_model.best_params_)
     print(metrics.classification_report(y_test, prediction))
 
+def train_fixed_param(model, dataset, text):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    text_clf = Pipeline([('features', FeatureUnion([
+                            ('text', Pipeline([
+                                ('extract', ColumnExtractor([...,0])),
+                                ('vectorize', vectorizer),
+                                ('reduce_dim', TruncatedSVD(n_components = 100))
+                            ])),
+                            ('no_text', Pipeline([
+                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                            ]))
+                        ])),
+                        ('classifier', model)])
+
+    #gs = grid_search.GridSearchCV(text_clf, parameters)
+    resulting_model = text_clf.fit(X_train,y_train)
+    prediction = resulting_model.predict(X_test)
+
+    # Output
+    #print(resulting_model.best_params_)
+    print(metrics.classification_report(y_test, prediction))
+    print_report(X_test, y_test, resulting_model, prediction, text)
+
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     resulting_model = model.fit(X_train, y_train)
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print_report(X_test, y_test, resulting_model, prediction)
+    print_report(X_test, y_test, resulting_model, prediction, text)
 
 # CROSS VALIDATION
 def cross_val_train(model, dataset, nfolds, scoring):
