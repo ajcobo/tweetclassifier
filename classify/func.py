@@ -233,17 +233,7 @@ def grid_search_with_param(model, dataset, parameters):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
-    text_clf = Pipeline([('features', FeatureUnion([
-                            ('text', Pipeline([
-                                ('extract', ColumnExtractor([...,0])),
-                                ('vectorize', vectorizer),
-                                ('reduce_dim', TruncatedSVD())
-                            ])),
-                            ('no_text', Pipeline([
-                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
-                            ]))
-                        ])),
-                        ('classifier', model)])
+    text_clf = main_pipeline(model)
 
     gs = grid_search.GridSearchCV(text_clf, parameters)
     resulting_model = gs.fit(X_train,y_train)
@@ -255,20 +245,8 @@ def grid_search_with_param(model, dataset, parameters):
 
 def train_fixed_param(model, dataset, text):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
-    #Text vectorization using text processing
-    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
-    text_clf = Pipeline([('features', FeatureUnion([
-                            ('text', Pipeline([
-                                ('extract', ColumnExtractor([...,0])),
-                                ('vectorize', vectorizer),
-                                ('reduce_dim', TruncatedSVD(n_components = 100))
-                            ])),
-                            ('no_text', Pipeline([
-                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
-                            ]))
-                        ])),
-                        ('classifier', model)])
+    text_clf = fixed_pipeline(model)
 
     #gs = grid_search.GridSearchCV(text_clf, parameters)
     resulting_model = text_clf.fit(X_train,y_train)
@@ -276,7 +254,7 @@ def train_fixed_param(model, dataset, text):
 
     # Output
     #print(resulting_model.best_params_)
-    print(metrics.classification_report(y_test, prediction))
+    #print(metrics.classification_report(y_test, prediction))
     print_report(X_test, y_test, resulting_model, prediction, text)
 
 def train_notext(model, dataset):
@@ -292,30 +270,72 @@ def cross_val_train(model, dataset, nfolds, scoring):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     #scores = cross_validation.cross_val_score(model, X_train, y_train, cv = folds, score_func=scoring)
     kf = cross_validation.KFold(len(X_train), nfolds)
-    true_scores, false_scores = custom_cross_val_score(model, X_train, y_train, kf)
+    text_clf = main_pipeline(model)
+    true_scores, false_scores, roc = custom_cross_val_score(text_clf, X_train, y_train, kf)
     #print(cross_validation.cross_val_score(model, X_train,y_train,cv=kf,scoring='accuracy'))
     result = np.array([true_scores, false_scores], dtype = [('precision', 'float'), ('recall', 'float'), ('fscore', 'float')])
-    print_val_report(result)
+    print_cross_val_report(result, roc)
 
 def custom_cross_val_score(model, X, y, kfolds):
     cm = np.zeros(len(np.unique(y)) ** 2)
+    roc = 0
     for i, (train, test) in enumerate(kfolds):
         model.fit(X[train], y[train])
         y_pred = model.predict(X[test])
         cm +=  metrics.confusion_matrix(y[test], y_pred).flatten()
         report = metrics.classification_report(y[test], y_pred)
+        roc += compute_roc(y[test], y_pred)
         print(report)
-    return compute_measures(*cm / kfolds.n_folds), compute_negative_measures(*cm / kfolds.n_folds)
+        print("ROC: ", compute_roc(y[test], y_pred))
+    return compute_measures(*cm / kfolds.n_folds), compute_negative_measures(*cm / kfolds.n_folds), roc / kfolds.n_folds
+
+def compute_roc(test, score):
+    fpr, tpr, _ = metrics.roc_curve(test, score)
+    return metrics.auc(fpr, tpr)
 
 def compute_measures(tp, fp, fn, tn):
-     """Computes effectiveness measures given a confusion matrix."""
-     specificity = tn / (tn + fp)
-     sensitivity = tp / (tp + fn)
-     fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
-     return specificity, sensitivity, fmeasure
+    """Computes effectiveness measures given a confusion matrix."""
+    specificity = tn / (tn + fp)
+    sensitivity = tp / (tp + fn)
+    fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
+    return specificity, sensitivity, fmeasure
 
 def compute_negative_measures(tp, fp, fn, tn):
-     specificity = tp / (tp + fn)
-     sensitivity = tn / (tn + fp)
-     fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
-     return specificity, sensitivity, fmeasure
+    specificity = tp / (tp + fn)
+    sensitivity = tn / (tn + fp)
+    fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
+    return specificity, sensitivity, fmeasure
+
+def fixed_pipeline(model):
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    pipeline = Pipeline([('features', FeatureUnion([
+                        ('text', Pipeline([
+                            ('extract', ColumnExtractor([...,0])),
+                            ('vectorize', vectorizer),
+                            ('reduce_dim', TruncatedSVD(n_components = 100))
+                        ])),
+                        ('no_text', Pipeline([
+                            ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                        ]))
+                    ])),
+                    ('classifier', model)])
+    return pipeline
+
+def main_pipeline(model):
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    pipeline = Pipeline([('features', FeatureUnion([
+                            ('text', Pipeline([
+                                ('extract', ColumnExtractor([...,0])),
+                                ('vectorize', vectorizer),
+                                ('reduce_dim', TruncatedSVD())
+                            ])),
+                            ('no_text', Pipeline([
+                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                            ]))
+                        ])),
+                        ('classifier', model)])
+    return pipeline

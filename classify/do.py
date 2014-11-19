@@ -5,8 +5,12 @@ from func import *
 from sklearn import svm, ensemble, linear_model
 
 #Load Dataset
-earthquake_time = datetime.datetime(2010, 2, 27, 3,34,8)
-dataset = extract_features("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv", earthquake_time)
+earthquake_time = datetime.datetime(2010, 2, 27, 3, 34, 8)
+dataset =  extract_features_with_timegap("/home/alf/Dropbox/Master/AC/Ground Truth/Consolidated/GroundTruthTotal.csv", earthquake_time)
+
+#Load Noise Dataset
+base_first_date = pa.to_datetime(dataset.features["date"][0] +" "+dataset.features["time"][0])
+noiseset = extract_noise_features_with_timegap("/home/alf/Dropbox/Master/AC/Noise/NoiseSet.csv",base_first_date, earthquake_time)
 
 #Extract each feature set
 columns_feature_1 = ['texto', 'time_gap', 'followers_count', 'friends_count']
@@ -14,6 +18,12 @@ columns_feature_2 = ['texto', 'followers_count', 'friends_count']
 columns_feature_3 = ['texto', 'time_gap', 'friends_count']
 columns_feature_4 = ['texto', 'time_gap', 'followers_count']
 columns_feature_5 = ['time_gap', 'followers_count', 'friends_count']
+
+columns_noise_feature_1 = ['text', 'time_gap', 'user.followers_counts', 'user.friends_count']
+columns_noise_feature_2 = ['text', 'user.followers_count', 'user.friends_count']
+columns_noise_feature_3 = ['text', 'time_gap', 'user.friends_count']
+columns_noise_feature_4 = ['text', 'time_gap', 'user.followers_count']
+columns_noise_feature_5 = ['time_gap', 'user.followers_count', 'user.friends_count']
 
 #does it work?
 dataset.features['time_gap'] = dataset.features['time_gap'].astype('timedelta64[h]')
@@ -55,10 +65,34 @@ test_feature = [['esto es una prueba', 'una prueba dada por arreglo', 'me gusta 
 #grid_search_lsa(ensemble.RandomForestClassifier(), feature_1, parameters)
 #train_fixed_param(ensemble.RandomForestClassifier(), feature_1)
 #train_fixed_param(svm.SVC(kernel='linear'), feature_1, "SVM Linear")
-train_fixed_param(svm.SVC(kernel='rbf'), feature_1, "SVM RBF")
-#train_fixed_param(svm.SVC(kernel='poly'), feature_1)
-#train_fixed_param(svm.SVC(kernel='sigmoid'), feature_1)
+#train_fixed_param(svm.SVC(kernel='rbf'), feature_1, "SVM RBF")
+#train_fixed_param(svm.SVC(kernel='poly'), feature_1, "SVM Poly")
+#train_fixed_param(svm.SVC(kernel='sigmoid'), feature_1, "SVM Sigmoid")
 
 #Reg Log
-train_fixed_param(linear_model.LogisticRegression(), feature_1, "Logistic Regression")
+#train_fixed_param(linear_model.LogisticRegression(), feature_1, "Logistic Regression")
 
+## Reunion 16/10/14
+model = linear_model.LogisticRegression()
+train_fixed_param(model, feature_1, "Logistic Regression")
+# cross_val_train(model, feature_1, 10, metrics.classification_report)
+
+model = ensemble.RandomForestClassifier()
+train_fixed_param(model, feature_1, "Random Forest")
+# cross_val_train(model, feature_1, 10, metrics.classification_report)
+
+model = svm.SVC(kernel='linear')
+train_fixed_param(model, feature_1, "SVM Linear")
+# cross_val_train(model, feature_1, 10, metrics.classification_report)
+
+model = svm.SVC(kernel='poly')
+train_fixed_param(model, feature_1, "SVM Poly")
+# cross_val_train(model, feature_1, 10, metrics.classification_report)
+
+model = svm.SVC(kernel='sigmoid')
+train_fixed_param(model, feature_1, "SVM Sigmoid")
+# cross_val_train(model, feature_1, 10, metrics.classification_report)
+
+model = svm.SVC(kernel='rbf')
+train_fixed_param(model, feature_1, "SVM RBF")
+# cross_val_train(model, feature_1, 10, metrics.classification_report())
