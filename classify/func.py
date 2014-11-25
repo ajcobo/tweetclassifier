@@ -279,15 +279,23 @@ def cross_val_train(model, dataset, nfolds, scoring, title = "", save = False):
 def custom_cross_val_score(model, X, y, kfolds):
     cm = np.zeros(len(np.unique(y)) ** 2)
     roc = 0
+    substract_folds = 0
     for i, (train, test) in enumerate(kfolds):
         model.fit(X[train], y[train])
         y_pred = model.predict(X[test])
-        cm +=  metrics.confusion_matrix(y[test], y_pred).flatten()
+        cm += metrics.confusion_matrix(y[test], y_pred).flatten()
         report = metrics.classification_report(y[test], y_pred)
-        roc += compute_roc(y[test], y_pred)
+        new_roc = 0
+        unique = np.unique(y[test])
+        # Just one label of False Values does not make sense
+        if len(unique) == 1 and unique[0] is np.False_:
+            substract_folds += 1
+        else:
+            new_roc = compute_roc(y[test], y_pred)
+            roc += new_roc
         print(report)
-        print("ROC: ", compute_roc(y[test], y_pred))
-    return compute_measures(*cm / kfolds.n_folds), compute_negative_measures(*cm / kfolds.n_folds), roc / kfolds.n_folds
+        print("ROC: ", new_roc)
+    return compute_measures(*cm / kfolds.n_folds), compute_negative_measures(*cm / kfolds.n_folds), roc / (kfolds.n_folds-substract_folds)
 
 def compute_roc(test, score):
     fpr, tpr, _ = metrics.roc_curve(test, score)

@@ -125,8 +125,8 @@ consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, no
 save = True
 
 models = {'Logistic Regression': linear_model.LogisticRegression(),
-          'Random Forest': ensemble.RandomForestClassifier()
-          #'SVM Linear': svm.SVC(kernel='linear'), 
+          'Random Forest': ensemble.RandomForestClassifier(),
+          'SVM Linear': svm.SVC(kernel='linear'),
           #'SVM Poly': svm.SVC(kernel='poly'), 
           #'SVM Sigmoid': svm.SVC(kernel='sigmoid'), 
           #'SVM RBF': svm.SVC(kernel='rbf')
