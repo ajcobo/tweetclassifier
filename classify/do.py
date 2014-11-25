@@ -125,90 +125,29 @@ consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, no
 save = True
 
 models = {'Logistic Regression': linear_model.LogisticRegression(),
-          'Random Forest': ensemble.RandomForestClassifier(), 
-          'SVM Linear': svm.SVC(kernel='linear'), 
-          'SVM Poly': svm.SVC(kernel='poly'), 
-          'SVM Sigmoid': svm.SVC(kernel='sigmoid'), 
-          'SVM RBF': svm.SVC(kernel='rbf')
+          'Random Forest': ensemble.RandomForestClassifier()
+          #'SVM Linear': svm.SVC(kernel='linear'), 
+          #'SVM Poly': svm.SVC(kernel='poly'), 
+          #'SVM Sigmoid': svm.SVC(kernel='sigmoid'), 
+          #'SVM RBF': svm.SVC(kernel='rbf')
 }
 
-model = linear_model.LogisticRegression()
-train_fixed_param(model, consolidated_feature_1_0_8, "Logistic Regression, Noise Proportion 0.8", save)
-train_fixed_param(model, consolidated_feature_1_0_6, "Logistic Regression, Noise Proportion 0.6", save)
-train_fixed_param(model, consolidated_feature_1_0_4, "Logistic Regression, Noise Proportion 0.4", save)
-train_fixed_param(model, consolidated_feature_1_0_2, "Logistic Regression, Noise Proportion 0.2", save)
-train_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
+for title, model in models.items():
+  train_fixed_param(model, consolidated_feature_1_0_8, title+", Noise Proportion 0.8", save)
+  train_fixed_param(model, consolidated_feature_1_0_6, title+", Noise Proportion 0.6", save)
+  train_fixed_param(model, consolidated_feature_1_0_4, title+", Noise Proportion 0.4", save)
+  train_fixed_param(model, consolidated_feature_1_0_2, title+", Noise Proportion 0.2", save)
+  train_fixed_param(model, feature_1, title, save)
+  cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.8, 10 folds", save)
+  cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.6, 10 folds", save)
+  cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.4, 10 folds", save)
+  cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.2, 10 folds", save)
+  cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation"+title+", 10 folds", save)
 
-model = ensemble.RandomForestClassifier()
-train_fixed_param(model, consolidated_feature_1_0_8, "Random Forest Noise, Proportion 0.8", save)
-train_fixed_param(model, consolidated_feature_1_0_6, "Random Forest Noise, Proportion 0.6", save)
-train_fixed_param(model, consolidated_feature_1_0_4, "Random Forest Noise, Proportion 0.4", save)
-train_fixed_param(model, consolidated_feature_1_0_2, "Random Forest Noise, Proportion 0.2", save)
-train_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
-
-model = svm.SVC(kernel='linear')
-train_fixed_param(model, consolidated_feature_1_0_8, "SVM Linear, Noise Proportion 0.8", save)
-train_fixed_param(model, consolidated_feature_1_0_8, "SVM Linear, Noise Proportion 0.6", save)
-train_fixed_param(model, consolidated_feature_1_0_8, "SVM Linear, Noise Proportion 0.4", save)
-train_fixed_param(model, consolidated_feature_1_0_8, "SVM Linear, Noise Proportion 0.2", save)
-train_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
-
-model = svm.SVC(kernel='poly')
-train_fixed_param(model, feature_1, "SVM Poly, Noise Proportion 0.8", save )
-train_fixed_param(model, feature_1, "SVM Poly, Noise Proportion 0.6", save )
-train_fixed_param(model, feature_1, "SVM Poly, Noise Proportion 0.4", save )
-train_fixed_param(model, feature_1, "SVM Poly, Noise Proportion 0.2", save )
-train_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
-
-
-model = svm.SVC(kernel='sigmoid')
-train_fixed_param(model, feature_1, "SVM Sigmoid, Noise Proportion 0.8", save)
-train_fixed_param(model, feature_1, "SVM Sigmoid, Noise Proportion 0.6", save)
-train_fixed_param(model, feature_1, "SVM Sigmoid, Noise Proportion 0.4", save)
-train_fixed_param(model, feature_1, "SVM Sigmoid, Noise Proportion 0.2", save)
-train_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
-
-model = svm.SVC(kernel='rbf')
-train_fixed_param(model, feature_1, "SVM RBF, Noise Proportion 0.8", save)
-train_fixed_param(model, feature_1, "SVM RBF, Noise Proportion 0.6", save)
-train_fixed_param(model, feature_1, "SVM RBF, Noise Proportion 0.4", save)
-train_fixed_param(model, feature_1, "SVM RBF, Noise Proportion 0.2", save)
-ttrain_fixed_param(model, feature_1, "Logistic Regression", save)
-cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.8, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.6, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.4, 10 folds", save)
-cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation SVM Linear, NP 0.2, 10 folds", save)
-cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation SVM Linear, 10 folds", save)
-
-#Naive Bayes Gaussian Multinomial Bernoulli
-model = GaussianNB()
-model = MultinomialNB
-model = BernoulliNB
-#SGD: Stochastic Gradient Descent
-model = SGDClassifier()
-#Grid Search best algorithms
+# #Naive Bayes Gaussian Multinomial Bernoulli
+# model = GaussianNB()
+# model = MultinomialNB
+# model = BernoulliNB
+# #SGD: Stochastic Gradient Descent
+# model = SGDClassifier()
+# #Grid Search best algorithms
