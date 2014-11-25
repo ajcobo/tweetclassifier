@@ -243,7 +243,7 @@ def grid_search_with_param(model, dataset, parameters):
     print(resulting_model.best_params_)
     print(metrics.classification_report(y_test, prediction))
 
-def train_fixed_param(model, dataset, text):
+def train_fixed_param(model, dataset, text, save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
 
     text_clf = fixed_pipeline(model)
@@ -255,7 +255,7 @@ def train_fixed_param(model, dataset, text):
     # Output
     #print(resulting_model.best_params_)
     #print(metrics.classification_report(y_test, prediction))
-    print_report(X_test, y_test, resulting_model, prediction, text)
+    print_report(X_test, y_test, resulting_model, prediction, text, save)
 
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -266,7 +266,7 @@ def train_notext(model, dataset):
     print_report(X_test, y_test, resulting_model, prediction, text)
 
 # CROSS VALIDATION
-def cross_val_train(model, dataset, nfolds, scoring):
+def cross_val_train(model, dataset, nfolds, scoring, title = "", save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     #scores = cross_validation.cross_val_score(model, X_train, y_train, cv = folds, score_func=scoring)
     kf = cross_validation.KFold(len(X_train), nfolds)
@@ -274,7 +274,7 @@ def cross_val_train(model, dataset, nfolds, scoring):
     true_scores, false_scores, roc = custom_cross_val_score(text_clf, X_train, y_train, kf)
     #print(cross_validation.cross_val_score(model, X_train,y_train,cv=kf,scoring='accuracy'))
     result = np.array([true_scores, false_scores], dtype = [('precision', 'float'), ('recall', 'float'), ('fscore', 'float')])
-    print_cross_val_report(result, roc)
+    print_cross_val_report(result, roc, title, save)
 
 def custom_cross_val_score(model, X, y, kfolds):
     cm = np.zeros(len(np.unique(y)) ** 2)
