@@ -233,7 +233,7 @@ def grid_search_with_param(model, dataset, parameters):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
-    text_clf = main_pipeline(model)
+    text_clf = main_pipeline(model, n_components=100)
 
     gs = grid_search.GridSearchCV(text_clf, parameters)
     resulting_model = gs.fit(X_train,y_train)
@@ -243,10 +243,10 @@ def grid_search_with_param(model, dataset, parameters):
     print(resulting_model.best_params_)
     print(metrics.classification_report(y_test, prediction))
 
-def train_fixed_param(model, dataset, text, save = False):
+def train_fixed_param(model, dataset, text, n_components=100, save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
 
-    text_clf = fixed_pipeline(model)
+    text_clf = main_pipeline(model, n_components)
 
     #gs = grid_search.GridSearchCV(text_clf, parameters)
     resulting_model = text_clf.fit(X_train,y_train)
@@ -266,14 +266,14 @@ def train_notext(model, dataset):
     print_report(X_test, y_test, resulting_model, prediction, text)
 
 # CROSS VALIDATION
-def cross_val_train(model, dataset, nfolds, scoring, title = "", save = False):
+def cross_val_train(model, dataset, nfolds, scoring, title = "", n_components=100, save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     #scores = cross_validation.cross_val_score(model, X_train, y_train, cv = folds, score_func=scoring)
     kf = cross_validation.KFold(len(X_train), nfolds)
-    text_clf = main_pipeline(model)
+    text_clf = main_pipeline(model, n_components=100)
     true_scores, false_scores, roc = custom_cross_val_score(text_clf, X_train, y_train, kf)
     #print(cross_validation.cross_val_score(model, X_train,y_train,cv=kf,scoring='accuracy'))
-    result = np.array([true_scores, false_scores], dtype = [('precision', 'float'), ('recall', 'float'), ('fscore', 'float')])
+    result = np.array([('True',)+true_scores, ('False',)+false_scores], dtype=[('class', 'U5'), ('precision', 'float'), ('recall', 'float'), ('fscore', 'float')])
     print_cross_val_report(result, roc, title, save)
 
 def custom_cross_val_score(model, X, y, kfolds):
@@ -303,16 +303,16 @@ def compute_roc(test, score):
 
 def compute_measures(tp, fp, fn, tn):
     """Computes effectiveness measures given a confusion matrix."""
-    specificity = tn / (tn + fp)
-    sensitivity = tp / (tp + fn)
-    fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
-    return specificity, sensitivity, fmeasure
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    fmeasure = 2 * tp / (2 * tp + fp + fn)
+    return precision, recall, fmeasure
 
 def compute_negative_measures(tp, fp, fn, tn):
-    specificity = tp / (tp + fn)
-    sensitivity = tn / (tn + fp)
-    fmeasure = 2 * (specificity * sensitivity) / (specificity + sensitivity)
-    return specificity, sensitivity, fmeasure
+    precision = tn / (tn + fn)
+    recall = tn / (tn + fp)
+    fmeasure = 2 * tn / (2 * tn + fn + fp)
+    return precision, recall, fmeasure
 
 def fixed_pipeline(model):
     #Text vectorization using text processing
@@ -331,7 +331,7 @@ def fixed_pipeline(model):
                     ('classifier', model)])
     return pipeline
 
-def main_pipeline(model):
+def main_pipeline(model, n_components=100):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
@@ -339,7 +339,7 @@ def main_pipeline(model):
                             ('text', Pipeline([
                                 ('extract', ColumnExtractor([...,0])),
                                 ('vectorize', vectorizer),
-                                ('reduce_dim', TruncatedSVD())
+                                ('reduce_dim', TruncatedSVD(n_components=n_components))
                             ])),
                             ('no_text', Pipeline([
                                 ('extract', ColumnExtractor([...,slice(1,None,None)]))

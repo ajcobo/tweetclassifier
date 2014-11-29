@@ -123,26 +123,27 @@ consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, no
 
 #Fin de semana 22/11/14
 save = True
-
+n_components = 100
+folds = 10
 models = {'Logistic Regression': linear_model.LogisticRegression(),
           'Random Forest': ensemble.RandomForestClassifier(),
           'SVM Linear': svm.SVC(kernel='linear'),
-          #'SVM Poly': svm.SVC(kernel='poly'), 
-          #'SVM Sigmoid': svm.SVC(kernel='sigmoid'), 
-          #'SVM RBF': svm.SVC(kernel='rbf')
+          'SVM Poly': svm.SVC(kernel='poly'),
+          'SVM Sigmoid': svm.SVC(kernel='sigmoid'),
+          'SVM RBF': svm.SVC(kernel='rbf')
 }
 
 for title, model in models.items():
-  train_fixed_param(model, consolidated_feature_1_0_8, title+", Noise Proportion 0.8", save)
-  train_fixed_param(model, consolidated_feature_1_0_6, title+", Noise Proportion 0.6", save)
-  train_fixed_param(model, consolidated_feature_1_0_4, title+", Noise Proportion 0.4", save)
-  train_fixed_param(model, consolidated_feature_1_0_2, title+", Noise Proportion 0.2", save)
-  train_fixed_param(model, feature_1, title, save)
-  cross_val_train(model, consolidated_feature_1_0_8, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.8, 10 folds", save)
-  cross_val_train(model, consolidated_feature_1_0_6, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.6, 10 folds", save)
-  cross_val_train(model, consolidated_feature_1_0_4, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.4, 10 folds", save)
-  cross_val_train(model, consolidated_feature_1_0_2, 10, metrics.classification_report, "Cross Validation"+title+", NP 0.2, 10 folds", save)
-  cross_val_train(model, feature_1, 10, metrics.classification_report, "Cross Validation"+title+", 10 folds", save)
+  train_fixed_param(model, consolidated_feature_1_0_8, title+", Noise Proportion 0.8 "+str(n_components)+" dim", n_components, save)
+  train_fixed_param(model, consolidated_feature_1_0_6, title+", Noise Proportion 0.6 "+str(n_components)+" dim", n_components, save)
+  train_fixed_param(model, consolidated_feature_1_0_4, title+", Noise Proportion 0.4 "+str(n_components)+" dim", n_components, save)
+  train_fixed_param(model, consolidated_feature_1_0_2, title+", Noise Proportion 0.2 "+str(n_components)+" dim", n_components, save)
+  train_fixed_param(model, feature_1, title+" "+str(n_components)+" dim", n_components, save)
+  cross_val_train(model, consolidated_feature_1_0_8, folds, metrics.classification_report, "Cross Validation"+title+", NP 0.8, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
+  cross_val_train(model, consolidated_feature_1_0_6, folds, metrics.classification_report, "Cross Validation"+title+", NP 0.6, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
+  cross_val_train(model, consolidated_feature_1_0_4, folds, metrics.classification_report, "Cross Validation"+title+", NP 0.4, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
+  cross_val_train(model, consolidated_feature_1_0_2, folds, metrics.classification_report, "Cross Validation"+title+", NP 0.2, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
+  cross_val_train(model, feature_1, folds, metrics.classification_report, "Cross Validation"+title+", "+str(folds)+" folds", n_components, save)
 
 # #Naive Bayes Gaussian Multinomial Bernoulli
 # model = GaussianNB()
