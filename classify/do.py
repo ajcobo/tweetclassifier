@@ -129,9 +129,9 @@ models = {
           #'Logistic Regression': linear_model.LogisticRegression(),
           #'Random Forest': ensemble.RandomForestClassifier(),
           #'SVM Sigmoid': svm.SVR(kernel='sigmoid'),
-          #'SVM RBF': svm.SVR(kernel='rbf')
-          'SVM Poly': svm.SVC(kernel='poly', verbose=True, cache_size=2000),
-          'SVM Linear': svm.SVC(kernel='linear', verbose=True, cache_size=2000)
+          #'SVM RBF': svm.SVC(kernel='rbf'),
+          # 'SVM Poly': svm.SVC(kernel='poly', verbose=True, cache_size=2000),
+          # 'SVM Linear': svm.SVC(kernel='linear', verbose=True, cache_size=2000)
 
 }
 for title, model in models.items():
