@@ -145,7 +145,7 @@ for title, model in models.items():
   cross_val_train(model, consolidated_feature_1_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
   cross_val_train(model, consolidated_feature_1_0_4, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.4, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
   cross_val_train(model, consolidated_feature_1_0_2, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.2, "+str(folds)+" folds "+str(n_components)+" dim", n_components, save)
-  cross_val_train(model, feature_1, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds", n_components, save)
+  cross_val_train(model, feature_1, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds"+str(n_components)+" dim", n_components, save)
 
 # #Naive Bayes Gaussian Multinomial Bernoulli
 # model = GaussianNB()
