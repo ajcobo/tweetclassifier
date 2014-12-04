@@ -28,6 +28,29 @@ def print_report(X_test, y_test, resulting_model, prediction, text, save = False
     #if hasattr(resulting_model.named_steps['classifier'], 'coef_'):
     #    print(resulting_model.named_steps['classifier'].coef_)
 
+def print_grid_search_report(X_test, y_test, resulting_model, prediction, text, save = False):
+    print(text)
+    print(resulting_model.best_params_)
+    print(metrics.classification_report(y_test, prediction))
+    predicted_scores = grid_search_predict_scores(resulting_model, X_test)
+    plot_roc(y_test, predicted_scores, text, save)
+    if save:
+        save_model(resulting_model.best_estimator_, text)
+        text_file = open(text+".txt", "w")
+        text_file.write(text+'\n')
+        text_file.write(str(resulting_model.best_params_)+'\n')
+        text_file.write(metrics.classification_report(y_test, prediction))
+        roc_auc = get_roc_auc(y_test, predicted_scores)
+        text_file.write("roc %0.6f" % roc_auc+'\n')
+        if (resulting_model.best_estimator_.__class__.__name__ == 'LogisticRegression'):
+            text_file.write('Interpreted Weights\n')
+            np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
+            text_file.write(str(np.exp( resulting_model.best_estimator_.named_steps['classifier'].coef_)))
+        text_file.close()
+
+    #if hasattr(resulting_model.named_steps['classifier'], 'coef_'):
+    #    print(resulting_model.named_steps['classifier'].coef_)
+
 def print_cross_val_report(result, roc, title = "", save = False):
     tabulated_result = tabulate(result, headers = result.dtype.names)
     roc_summary = "roc %0.6f" % roc
@@ -77,6 +100,18 @@ def predict_scores(model, X_test):
             return model.predict_proba(X_test)[:,1]
         else:
             return model.predict_proba(X_test)
+
+def grid_search_predict_scores(model, X_test):
+    if hasattr(model.best_estimator_.named_steps, "decision_function"):
+        if (model.best_estimator_.named_steps['classifier'].__class__.__name__== 'RandomForestClassifier'):
+            return model.best_estimator_.decision_function(X_test)[:,1]
+        else:
+            return model.best_estimator_.decision_function(X_test).astype('float')
+    else:
+        if (model.best_estimator_.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
+            return model.best_estimator_.predict_proba(X_test)[:,1]
+        else:
+            return model.best_estimator_.predict_proba(X_test)
 
 def save_model(model, title):
     joblib.dump(model, title+'.pkl', compress=9)

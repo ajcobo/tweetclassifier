@@ -228,20 +228,19 @@ def grid_search_pca(model, dataset, parameters):
     print(metrics.classification_report(y_test, prediction))
     # print_report(X_test, y_test, resulting_model, prediction)
 
-def grid_search_with_param(model, dataset, parameters):
+def grid_search_with_param(model, dataset, parameters, text="", save=False, n_jobs = -1):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
     text_clf = main_pipeline(model, n_components=100)
 
-    gs = grid_search.GridSearchCV(text_clf, parameters)
+    gs = grid_search.GridSearchCV(text_clf, parameters, n_jobs=n_jobs)
     resulting_model = gs.fit(X_train,y_train)
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print(resulting_model.best_params_)
-    print(metrics.classification_report(y_test, prediction))
+    print_grid_search_report(X_test, y_test, resulting_model, prediction, text, save)
 
 def train_fixed_param(model, dataset, text, n_components=100, save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
