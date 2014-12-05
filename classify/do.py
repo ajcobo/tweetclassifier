@@ -2,7 +2,7 @@ from load import *
 from clean import *
 from func import *
 
-from sklearn import svm, ensemble, linear_model
+from sklearn import svm, ensemble, linear_model, naive_bayes
 
 #Load Dataset
 earthquake_time = datetime.datetime(2010, 2, 27, 3, 34, 8)
@@ -40,27 +40,31 @@ noise_feature_1 = [noiseset.features[columns_noise_feature_1].values, noiseset.f
 noise_feature_2 = [noiseset.features[columns_noise_feature_2].values, noiseset.features['value'].values]
 noise_feature_3 = [noiseset.features[columns_noise_feature_3].values, noiseset.features['value'].values]
 noise_feature_4 = [noiseset.features[columns_noise_feature_4].values, noiseset.features['value'].values]
+noise_text = [noiseset.features['text'].values, noiseset.features['value'].values]
 
 consolidated_feature_1_0_8 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.8, train_proportion = 0.8)
 consolidated_feature_2_0_8 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.8, train_proportion = 0.8)
 consolidated_feature_3_0_8 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.8, train_proportion = 0.8)
 consolidated_feature_4_0_8 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.8, train_proportion = 0.8)
-
+consolidated_feature_text_0_8 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.8, train_proportion = 0.8)
 
 consolidated_feature_1_0_6 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.6, train_proportion = 0.8)
 consolidated_feature_2_0_6 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.6, train_proportion = 0.8)
 consolidated_feature_3_0_6 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.6, train_proportion = 0.8)
 consolidated_feature_4_0_6 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.6, train_proportion = 0.8)
+consolidated_feature_text_0_6 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.6, train_proportion = 0.8)
 
 consolidated_feature_1_0_4 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.4, train_proportion = 0.8)
 consolidated_feature_2_0_4 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.4, train_proportion = 0.8)
 consolidated_feature_3_0_4 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.4, train_proportion = 0.8)
 consolidated_feature_4_0_4 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.4, train_proportion = 0.8)
+consolidated_feature_text_0_4 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.4, train_proportion = 0.8)
 
 consolidated_feature_1_0_2 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.2, train_proportion = 0.8)
 consolidated_feature_2_0_2 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.2, train_proportion = 0.8)
 consolidated_feature_3_0_2 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.2, train_proportion = 0.8)
 consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.2, train_proportion = 0.8)
+consolidated_feature_text_0_2 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.2, train_proportion = 0.8)
 # Perform analysis
 
 # #train(svm.SVC(), test_feature)
@@ -122,74 +126,75 @@ consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, no
 # # cross_val_train(model, feature_1, 10, metrics.classification_report())
 
 #Fin de semana 22/11/14
+save = False
+n_components = [10,50,100,500,1000,2000]
+folds = 10
+models = {
+          'Logistic Regression': linear_model.LogisticRegression(),
+          #'Random Forest': ensemble.RandomForestClassifier(),
+          #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
+          #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
+          #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
+          #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True)
+          #'MultinomialNB': naive_bayes.MultinomialNB(),
+          #'GaussianNB': naive_bayes.GaussianNB(),
+          #'BernoulliNB': naive_bayes.BernoulliNB(),
+          #'SGDClassifier': linear_model.SGDClassifier()
+
+
+}
+for n_component in n_components:
+  for title, model in models.items():
+    print("Working on "+title)
+    #train_text_fixed_param(model, consolidated_feature_text_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
+    #train_text_fixed_param(model, consolidated_feature_text_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
+    #train_text_fixed_param(model, consolidated_feature_text_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
+    #train_text_fixed_param(model, consolidated_feature_text_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
+    train_fixed_param(model, feature_2, title+" "+str(n_component)+" dim",n_component, save)
+    #cross_val_train(model, consolidated_feature_2_0_8, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.8, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+    #cross_val_train(model, consolidated_feature_2_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+    #cross_val_train(model, consolidated_feature_2_0_4, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.4, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+    #cross_val_train(model, consolidated_feature_2_0_2, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.2, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+    #cross_val_train(model, feature_2, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+
+# Search
 # save = True
-# n_components = [10,50,100,500,1000]
+# n_components = [10,50,100,500,1000, 2000]
 # folds = 10
+# n_jobs = -1
 # models = {
 #           #'Logistic Regression': linear_model.LogisticRegression(),
-#           #'Random Forest': ensemble.RandomForestClassifier(),
+#           'Random Forest': ensemble.RandomForestClassifier(),
 #           #'SVM Sigmoid': svm.SVC(kernel='sigmoid'),
 #           #'SVM RBF': svm.SVC(kernel='rbf'),
-#           'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
+#           #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
 #           #'SVM Linear': svm.SVC(kernel='linear', verbose=True, cache_size=2000)
 
 # }
-# for n_component in n_components:
-#   for title, model in models.items():
-#     print("Working on "+title)
-#     train_fixed_param(model, consolidated_feature_1_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
-#     train_fixed_param(model, consolidated_feature_1_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
-#     train_fixed_param(model, consolidated_feature_1_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
-#     train_fixed_param(model, consolidated_feature_1_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
-#     train_fixed_param(model, feature_1, title+" "+str(n_component)+" dim", n_component, save)
-#     cross_val_train(model, consolidated_feature_1_0_8, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.8, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-#     cross_val_train(model, consolidated_feature_1_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-#     cross_val_train(model, consolidated_feature_1_0_4, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.4, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-#     cross_val_train(model, consolidated_feature_1_0_2, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.2, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-#     cross_val_train(model, feature_1, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+# parameters =  {
+#           'Random Forest':[
+#             dict(
+#               classifier__criterion=["gini", "entropy"],
+#               # classifier__max_features
+#               # classifier__max_depth
+#               # classifier__min_samples_split
+#               # classifier__min_samples_leaf
+#               # classifier__bootstrap
+#               # classifier__oob_score
+#               # classifier__max_features
+#               # classifier__max_features
+#               )],
+#           'SVM Linear': [
+#             dict(
+#               classifier__C=[2**x for x in range(-5,15)],
+#               classifier__gamma=[2**x for x in range(-15,5)]
+#               )
 
-# Search
-save = True
-n_components = [10,50,100,500,1000]
-folds = 10
-n_jobs = -1
-models = {
-          #'Logistic Regression': linear_model.LogisticRegression(),
-          'Random Forest': ensemble.RandomForestClassifier(),
-          #'SVM Sigmoid': svm.SVC(kernel='sigmoid'),
-          #'SVM RBF': svm.SVC(kernel='rbf'),
-          #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
-          #'SVM Linear': svm.SVC(kernel='linear', verbose=True, cache_size=2000)
-
-}
-parameters =  [
-          dict(
-            classifier__criterion=["gini", "entropy"],
-            # classifier__max_features
-            # classifier__max_depth
-            # classifier__min_samples_split
-            # classifier__min_samples_leaf
-            # classifier__bootstrap
-            # classifier__oob_score
-            # classifier__max_features
-            # classifier__max_features
-            ),
-
-
-]
-for title, model in models.items():
-  grid_search_with_param(model, feature_1, parameters, title+" Grid Search" , save, n_jobs)
-  grid_search_with_param(model, consolidated_feature_1_0_8, parameters, title+" Grid Search 0.8" , save, n_jobs)
-  grid_search_with_param(model, consolidated_feature_1_0_6, parameters, title+" Grid Search 0.6" , save, n_jobs)
-  grid_search_with_param(model, consolidated_feature_1_0_4, parameters, title+" Grid Search 0.4" , save, n_jobs)
-  grid_search_with_param(model, consolidated_feature_1_0_2, parameters, title+" Grid Search 0.2" , save, n_jobs)
-
-
-
-# #Naive Bayes Gaussian Multinomial Bernoulli
-# model = GaussianNB()
-# model = MultinomialNB
-# model = BernoulliNB
-# #SGD: Stochastic Gradient Descent
-# model = SGDClassifier()
-# #Grid Search best algorithms
+#           ]
+# }
+# for title, model in models.items():
+#   grid_search_with_param(model, feature_2, parameters, title+" Grid Search" , save, n_jobs)
+#   grid_search_with_param(model, consolidated_feature_2_0_8, parameters, title+" Grid Search 0.8" , save, n_jobs)
+#   grid_search_with_param(model, consolidated_feature_2_0_6, parameters, title+" Grid Search 0.6" , save, n_jobs)
+#   grid_search_with_param(model, consolidated_feature_2_0_4, parameters, title+" Grid Search 0.4" , save, n_jobs)
+#   grid_search_with_param(model, consolidated_feature_2_0_2, parameters, title+" Grid Search 0.2" , save, n_jobs)

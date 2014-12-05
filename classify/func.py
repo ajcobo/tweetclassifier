@@ -17,7 +17,6 @@ import datetime
 from pprint import pprint
 import string
 
-
 #Regexp
 import re
 
@@ -120,7 +119,7 @@ def process_text(text, stem=True, remove_links=True, punctuation_exception='#@')
 
     return tokens
 
-def train_text(model, dataset):
+def train_text(model, dataset, text, save):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
 
     #Text vectorization using text processing
@@ -137,7 +136,7 @@ def train_text(model, dataset):
     prediction = resulting_model.predict(X_test_vectorized)
 
     # Output
-    print_report(X_test_vectorized, y_test, resulting_model, prediction)
+    print_report(X_test, y_test, resulting_model, prediction, text, save)
 
 def train_text_pca(model, dataset, n_components = 100):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -256,6 +255,20 @@ def train_fixed_param(model, dataset, text, n_components=100, save = False):
     #print(metrics.classification_report(y_test, prediction))
     print_report(X_test, y_test, resulting_model, prediction, text, save)
 
+def train_text_fixed_param(model, dataset, text, n_components=100, save = False):
+    X_train, X_test, y_train, y_test = split_dataset(dataset)
+
+    text_clf = text_pipeline(model, n_components)
+
+    #gs = grid_search.GridSearchCV(text_clf, parameters)
+    resulting_model = text_clf.fit(X_train,y_train)
+    prediction = resulting_model.predict(X_test)
+
+    # Output
+    #print(resulting_model.best_params_)
+    #print(metrics.classification_report(y_test, prediction))
+    print_single_report(X_test, y_test, resulting_model, prediction, text, save)
+
 def train_notext(model, dataset):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
     resulting_model = model.fit(X_train, y_train)
@@ -313,7 +326,7 @@ def compute_negative_measures(tp, fp, fn, tn):
     fmeasure = 2 * tn / (2 * tn + fn + fp)
     return precision, recall, fmeasure
 
-def fixed_pipeline(model):
+def fixed_pipeline(model, n_components):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
@@ -338,7 +351,7 @@ def main_pipeline(model, n_components=100):
                             ('text', Pipeline([
                                 ('extract', ColumnExtractor([...,0])),
                                 ('vectorize', vectorizer),
-                                ('reduce_dim', TruncatedSVD(n_components=n_components))
+                                ('reduce_dim', TruncateLDA(num_topics = n_components))
                             ])),
                             ('no_text', Pipeline([
                                 ('extract', ColumnExtractor([...,slice(1,None,None)]))
@@ -346,3 +359,17 @@ def main_pipeline(model, n_components=100):
                         ])),
                         ('classifier', model)])
     return pipeline
+def text_pipeline(model, n_components=100):
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    pipeline = Pipeline([('features', FeatureUnion([
+                            ('text', Pipeline([
+                                ('vectorize', vectorizer)
+                            ]))
+                        ])),
+                        ('classifier', model)])
+    return pipeline
+
+
+#('reduce_dim', TruncatedSVD(n_components=n_components))
