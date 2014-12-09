@@ -116,16 +116,19 @@ def plot_roc(test, score, title="", save = False):
         plt.show()
 
 def predict_scores(model, X_test):
+    mlist=["RandomForestClassifier", "BernoulliNB", "MultinomialNB", "GaussianNB"]
+    name = model.named_steps['classifier'].__class__.__name__
+    subrequired= any([x for x in mlist if x == name])
     if hasattr(model.named_steps['classifier'], "decision_function"):
-        if (model.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
+        if subrequired:
             return model.decision_function(X_test)[:,1]
         else:
-            return model.decision_function(X_test).astype('float')
+            return model.decision_function(X_test).astype(np.float64)
     else:
-        if (model.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
+        if subrequired:
             return model.predict_proba(X_test)[:,1]
         else:
-            return model.predict_proba(X_test)
+            return model.predict_proba(X_test).astype(np.float64)
 
 def predict_single_scores(model, X_test):
     if hasattr(model.named_steps['classifier'], "predict_proba"):
@@ -134,7 +137,7 @@ def predict_single_scores(model, X_test):
         if (model.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
             return model.decision_function(X_test)[:,1]
         else:
-            return model.decision_function(X_test).astype('float')
+            return model.decision_function(X_test).astype(np.float64)
 
 
 def grid_search_predict_scores(model, X_test):
@@ -142,7 +145,7 @@ def grid_search_predict_scores(model, X_test):
         if (model.best_estimator_.named_steps['classifier'].__class__.__name__== 'RandomForestClassifier'):
             return model.best_estimator_.decision_function(X_test)[:,1]
         else:
-            return model.best_estimator_.decision_function(X_test).astype('float')
+            return model.best_estimator_.decision_function(X_test).astype(np.float64)
     else:
         if (model.best_estimator_.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
             return model.best_estimator_.predict_proba(X_test)[:,1]

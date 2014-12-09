@@ -126,30 +126,28 @@ consolidated_feature_text_0_2 = join_datasets_by_proportion(dataset = total_text
 # # cross_val_train(model, feature_1, 10, metrics.classification_report())
 
 #Fin de semana 22/11/14
-save = False
+save = True
 n_components = [10,50,100,500,1000,2000]
 folds = 10
 models = {
           'Logistic Regression': linear_model.LogisticRegression(),
-          #'Random Forest': ensemble.RandomForestClassifier(),
-          #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
-          #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
+          'Random Forest': ensemble.RandomForestClassifier(),
+          'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
+          'SVM RBF': svm.SVC(kernel='rbf', probability=True),
           #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
-          #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True)
-          #'MultinomialNB': naive_bayes.MultinomialNB(),
-          #'GaussianNB': naive_bayes.GaussianNB(),
-          #'BernoulliNB': naive_bayes.BernoulliNB(),
-          #'SGDClassifier': linear_model.SGDClassifier()
-
-
+          #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True),
+          'MultinomialNB': naive_bayes.MultinomialNB(),
+          'GaussianNB': naive_bayes.GaussianNB(),
+          'BernoulliNB': naive_bayes.BernoulliNB(),
+          'SGDClassifier': linear_model.SGDClassifier()
 }
 for n_component in n_components:
   for title, model in models.items():
     print("Working on "+title)
-    #train_text_fixed_param(model, consolidated_feature_text_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
-    #train_text_fixed_param(model, consolidated_feature_text_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
-    #train_text_fixed_param(model, consolidated_feature_text_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
-    #train_text_fixed_param(model, consolidated_feature_text_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
+    train_fixed_param(model, consolidated_feature_2_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
+    train_fixed_param(model, consolidated_feature_2_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
+    train_fixed_param(model, consolidated_feature_2_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
+    train_fixed_param(model, consolidated_feature_2_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
     train_fixed_param(model, feature_2, title+" "+str(n_component)+" dim",n_component, save)
     #cross_val_train(model, consolidated_feature_2_0_8, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.8, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
     #cross_val_train(model, consolidated_feature_2_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)

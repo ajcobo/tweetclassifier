@@ -334,10 +334,10 @@ def fixed_pipeline(model, n_components):
                         ('text', Pipeline([
                             ('extract', ColumnExtractor([...,0])),
                             ('vectorize', vectorizer),
-                            ('reduce_dim', TruncatedSVD(n_components = 100))
+                            ('reduce_dim', TruncatedLDA(n_components = 100))
                         ])),
                         ('no_text', Pipeline([
-                            ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                            ('extract', ColumnExtractor([...,slice(1,None,None)], datatype=np.float64))
                         ]))
                     ])),
                     ('classifier', model)])
@@ -354,7 +354,7 @@ def main_pipeline(model, n_components=100):
                                 ('reduce_dim', TruncateLDA(num_topics = n_components))
                             ])),
                             ('no_text', Pipeline([
-                                ('extract', ColumnExtractor([...,slice(1,None,None)]))
+                                ('extract', ColumnExtractor([...,slice(1,None,None)], datatype=np.float64))
                             ]))
                         ])),
                         ('classifier', model)])
