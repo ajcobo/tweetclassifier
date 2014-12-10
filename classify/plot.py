@@ -6,76 +6,13 @@ import numpy as np
 from tabulate import tabulate
 from sklearn import metrics, cross_validation
 from sklearn.externals import joblib
-
-def print_single_report(X_test, y_test, resulting_model, prediction, text, save = False):
-    print(text)
-    print(metrics.classification_report(y_test, prediction))
-    print('accuracy '+str(metrics.accuracy_score(y_test,prediction)))
-    predicted_scores = predict_single_scores(resulting_model, X_test)
-    plot_roc(y_test, predicted_scores, text, save)
-    if save:
-        save_model(resulting_model, text)
-        text_file = open(text+".txt", "w")
-        text_file.write(text+'\n')
-        text_file.write(metrics.classification_report(y_test, prediction))
-        accuracy = metrics.accuracy_score(y_test,prediction)
-        text_file.write("accuracy %0.6f" % accuracy+'\n')
-        roc_auc = get_roc_auc(y_test, predicted_scores)
-        text_file.write("roc %0.6f" % roc_auc+'\n')
-        if (resulting_model.__class__.__name__ == 'LogisticRegression'):
-            text_file.write('Interpreted Weights\n')
-            np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
-            text_file.write(str(np.exp( resulting_model.coef_)))
-        text_file.close()
+import csv
 
 def print_report(X_test, y_test, resulting_model, prediction, text, save = False):
-    print(text)
-    print(metrics.classification_report(y_test, prediction))
-    print('accuracy '+str(metrics.accuracy_score(y_test,prediction)))
-    predicted_scores = predict_scores(resulting_model, X_test)
-    plot_roc(y_test, predicted_scores, text, save)
+    print_results(X_test, y_test, resulting_model, prediction, text, save)
     if save:
-        save_model(resulting_model, text)
-        text_file = open(text+".txt", "w")
-        text_file.write(text+'\n')
-        text_file.write(metrics.classification_report(y_test, prediction))
-        accuracy = metrics.accuracy_score(y_test,prediction)
-        text_file.write("accuracy %0.6f" % accuracy+'\n')
-        roc_auc = get_roc_auc(y_test, predicted_scores)
-        text_file.write("roc %0.6f" % roc_auc+'\n')
-        if (resulting_model.named_steps['classifier'].__class__.__name__ == 'LogisticRegression'):
-            text_file.write('Interpreted Weights\n')
-            np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
-            text_file.write(str(np.exp( resulting_model.named_steps['classifier'].coef_)))
-        text_file.close()
+        save_results(resulting_model,y_test,prediction, text)
 
-    #if hasattr(resulting_model.named_steps['classifier'], 'coef_'):
-    #    print(resulting_model.named_steps['classifier'].coef_)
-
-def print_grid_search_report(X_test, y_test, resulting_model, prediction, text, save = False):
-    print(text)
-    print(resulting_model.best_params_)
-    print(metrics.classification_report(y_test, prediction))
-    print(metrics.accuracy_score(y_test,prediction))
-    predicted_scores = grid_search_predict_scores(resulting_model, X_test)
-    plot_roc(y_test, predicted_scores, text, save)
-    if save:
-        save_model(resulting_model.best_estimator_, text)
-        text_file = open(text+".txt", "w")
-        text_file.write(text+'\n')
-        text_file.write(str(resulting_model.best_params_)+'\n')
-        text_file.write(metrics.classification_report(y_test, prediction))
-        text_file.write(metrics.accuracy_score(y_test,prediction)+'\n')
-        roc_auc = get_roc_auc(y_test, predicted_scores)
-        text_file.write("roc %0.6f" % roc_auc+'\n')
-        if (resulting_model.best_estimator_.__class__.__name__ == 'LogisticRegression'):
-            text_file.write('Interpreted Weights\n')
-            np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
-            text_file.write(str(np.exp( resulting_model.best_estimator_.named_steps['classifier'].coef_)))
-        text_file.close()
-
-    #if hasattr(resulting_model.named_steps['classifier'], 'coef_'):
-    #    print(resulting_model.named_steps['classifier'].coef_)
 
 def print_cross_val_report(result, roc, title = "", save = False):
     tabulated_result = tabulate(result, headers = result.dtype.names)
@@ -154,3 +91,34 @@ def grid_search_predict_scores(model, X_test):
 
 def save_model(model, title):
     joblib.dump(model, title+'.pkl', compress=9)
+
+def save_results(resulting_model, X_test, y_test, prediction, text):
+    save_model(resulting_model.best_estimator_, text)
+    predicted_scores = predict_scores(resulting_model.best_estimator_, X_test)
+    roc_auc = get_roc_auc(y_test, predicted_scores)
+    prf = metrics.precision_recall_fscore_support(y_test, prediction)
+    acc = metrics.accuracy_score(y_test,prediction)
+
+    with open('test.csv', 'w', newline='') as fp:
+        a = csv.writer(fp, delimiter=',')
+        params = []
+        data = [['precision', prf[0][1]],
+                ['recall', prf[1][1]],
+                ['fscore', prf[2][1]],
+                ['accuracy', acc],
+                ['roc', roc_auc]]
+        a.writerows(params)
+        a.writerows(data)
+
+        if (resulting_model.best_estimator_.named_steps['classifier'].__class__.__name__ == 'LogisticRegression'):
+            a.writerow('Interpreted Weights')
+            np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
+            a.writerows(np.exp( resulting_model.best_estimator_.named_steps['classifier'].coef_))
+
+def print_results(X_test, y_test, resulting_model, prediction, text, save):
+    print(resulting_model.best_params_)
+    print(text)
+    print(metrics.classification_report(y_test, prediction))
+    print('accuracy '+str(metrics.accuracy_score(y_test,prediction)))
+    predicted_scores = predict_scores(resulting_model, X_test)
+    plot_roc(y_test, predicted_scores, text, save)

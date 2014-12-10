@@ -126,73 +126,145 @@ consolidated_feature_text_0_2 = join_datasets_by_proportion(dataset = total_text
 # # cross_val_train(model, feature_1, 10, metrics.classification_report())
 
 #Fin de semana 22/11/14
-save = True
-n_components = [10,50,100,500,1000,2000]
-folds = 10
-models = {
-          'Logistic Regression': linear_model.LogisticRegression(),
-          'Random Forest': ensemble.RandomForestClassifier(),
-          'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
-          'SVM RBF': svm.SVC(kernel='rbf', probability=True),
-          #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
-          #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True),
-          'MultinomialNB': naive_bayes.MultinomialNB(),
-          'GaussianNB': naive_bayes.GaussianNB(),
-          'BernoulliNB': naive_bayes.BernoulliNB(),
-          'SGDClassifier': linear_model.SGDClassifier()
-}
-for n_component in n_components:
-  for title, model in models.items():
-    print("Working on "+title)
-    train_fixed_param(model, consolidated_feature_2_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
-    train_fixed_param(model, consolidated_feature_2_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
-    train_fixed_param(model, consolidated_feature_2_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
-    train_fixed_param(model, consolidated_feature_2_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
-    train_fixed_param(model, feature_2, title+" "+str(n_component)+" dim",n_component, save)
-    #cross_val_train(model, consolidated_feature_2_0_8, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.8, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-    #cross_val_train(model, consolidated_feature_2_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-    #cross_val_train(model, consolidated_feature_2_0_4, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.4, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-    #cross_val_train(model, consolidated_feature_2_0_2, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.2, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
-    #cross_val_train(model, feature_2, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+# save = True
+# #n_components = [10,50,100,500,1000,2000]
+# n_components = [10]
+# folds = 10
+# models = {
+#           'Logistic Regression': linear_model.LogisticRegression(),
+#           #'Random Forest': ensemble.RandomForestClassifier(),
+#           #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
+#           #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
+#           #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
+#           #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True),
+#           #'SVM Linear': svm.LinearSVC(dual=False),
+#           #'MultinomialNB': naive_bayes.MultinomialNB(),
+#           #'GaussianNB': naive_bayes.GaussianNB(),
+#           #'BernoulliNB': naive_bayes.BernoulliNB(),
+#           #'SGDClassifier': linear_model.SGDClassifier()
+# }
+# for n_component in n_components:
+#   for title, model in models.items():
+#     print("Working on "+title)
+#     train_fixed_param(model, consolidated_feature_2_0_8, title+", Noise Proportion 0.8 "+str(n_component)+" dim", n_component, save)
+#     train_fixed_param(model, consolidated_feature_2_0_6, title+", Noise Proportion 0.6 "+str(n_component)+" dim", n_component, save)
+#     train_fixed_param(model, consolidated_feature_2_0_4, title+", Noise Proportion 0.4 "+str(n_component)+" dim", n_component, save)
+#     train_fixed_param(model, consolidated_feature_2_0_2, title+", Noise Proportion 0.2 "+str(n_component)+" dim", n_component, save)
+#     train_fixed_param(model, feature_2, title+" "+str(n_component)+" dim",n_component, save)
+#     #cross_val_train(model, consolidated_feature_2_0_8, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.8, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+#     #cross_val_train(model, consolidated_feature_2_0_6, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.6, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+#     #cross_val_train(model, consolidated_feature_2_0_4, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.4, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+#     #cross_val_train(model, consolidated_feature_2_0_2, folds, metrics.classification_report, "Cross Validation "+title+", NP 0.2, "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
+#     #cross_val_train(model, feature_2, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
 
 # Search
-# save = True
-# n_components = [10,50,100,500,1000, 2000]
-# folds = 10
-# n_jobs = -1
-# models = {
-#           #'Logistic Regression': linear_model.LogisticRegression(),
-#           'Random Forest': ensemble.RandomForestClassifier(),
-#           #'SVM Sigmoid': svm.SVC(kernel='sigmoid'),
-#           #'SVM RBF': svm.SVC(kernel='rbf'),
-#           #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
-#           #'SVM Linear': svm.SVC(kernel='linear', verbose=True, cache_size=2000)
+save = True
+#n_components = [10,50,100,500,1000, 2000]
+n_components=10
+folds = 5
+n_jobs = -1
+models = {
+          #'Logistic Regression': linear_model.LogisticRegression(),
+          #'Random Forest': ensemble.RandomForestClassifier(),
+          #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
+          #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
+          #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
+          #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True),
+          #'SVM Linear': svm.LinearSVC(dual=False),
+          'MultinomialNB': naive_bayes.MultinomialNB(),
+          #'GaussianNB': naive_bayes.GaussianNB(),
+          #'BernoulliNB': naive_bayes.BernoulliNB(),
+          #'SGDClassifier': linear_model.SGDClassifier()
+}
+parameters =  {
+        'Linear Regression':[
+            dict(
+                classifier__C=[2**x for x in range(-5,15)],
+                classifier__penalty=['l1', 'l2'],
+                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__fit_intercept=[True, False],
+                classifier__intercept_scaling=[1,5,10,50,100,500,1000]
+            )
+        ],
+        'Random Forest':[
+            dict(
+                classifier__criterion=["gini", "entropy"],
+                classifier__max_features=['auto', 'sqrt', 'log2', None],
+                classifier__max_depth=[2,3,4,5,6,7,8,9,10,None],
+                classifier__min_samples_split=[1,2,3,4,5,6,7,8,9,10],
+                classifier__min_samples_leaf=[1,2,3,4,5,6,7,8,9,10],
+                classifier__bootstrap=[True, False],
+                classifier__oob_score=[True, False]
+            )
+        ],
+        'SVM Sigmoid': [
+            dict(
+                classifier__C=[2**x for x in range(-5,15)],
+                classifier__gamma=[2**x for x in range(-15,5)],
+                #classifier__coef0=[min(1-min , 0),max(<x,y>)], not correct for tuning
+                classifier__probability=[True],
+                classifier__shrinking=[True, False],
+                classifier__dual=[False],
+                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+            )
+        ],
+        'SVM RBF': [
+            dict(
+                classifier__C=[2**x for x in range(-5,15)],
+                classifier__gamma=[2**x for x in range(-15,5)],
+                #classifier__coef0=[min(1-min , 0),max(<x,y>)], not correct for tuning
+                classifier__probability=[True],
+                classifier__shrinking=[True, False],
+                classifier__dual=[False],
+                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+            )
+        ],
+        'SVM Linear': [
+            dict(
+                classifier__C=[2**x for x in range(-5,15)],
+                #classifier__gamma=[2**x for x in range(-15,5)],
+                classifier__loss=['l1', 'l2'],
+                classifier__penalty=['l1', 'l2'],
+                classifier__dual=[False],
+                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__fit_intercept=[True, False],
+                classifier__intercept_scaling=[1,5,10,50,100,500,1000]
+            )
+        ],
+        'MultinomialNB': [
+            dict(
+                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__fit_prior =[True, False]
+            )
+        ],
+        #'GaussianNB': [],
+        'BernoulliNB': [
+            dict(
+                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__binarize=[True, False],
+                classifier__fit_prior =[True, False]
+            )
+        ],
+        'SGDClassifier': [
+            dict(
+                 classifier__loss=['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive'],
+                 classifier__penalty=['l1', 'l2', 'elasticnet'],
+                 classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                 classifier__l1_ratio=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                 classifier__fit_intercept=[True, False],
+                 classifier__n_iter=[3,4,5,6,7],
+                 classifier__shuffle=[True, False],
+                 classifier__epsilon=[1e-01, 1e-02,1e-03,1e-04,1e-05],
+                 #classifier__learning_rate default is optimal
+                 #classifier__eta0
+                 classifier__power_t=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1]
+            )
+        ]
+}
 
-# }
-# parameters =  {
-#           'Random Forest':[
-#             dict(
-#               classifier__criterion=["gini", "entropy"],
-#               # classifier__max_features
-#               # classifier__max_depth
-#               # classifier__min_samples_split
-#               # classifier__min_samples_leaf
-#               # classifier__bootstrap
-#               # classifier__oob_score
-#               # classifier__max_features
-#               # classifier__max_features
-#               )],
-#           'SVM Linear': [
-#             dict(
-#               classifier__C=[2**x for x in range(-5,15)],
-#               classifier__gamma=[2**x for x in range(-15,5)]
-#               )
-
-#           ]
-# }
-# for title, model in models.items():
-#   grid_search_with_param(model, feature_2, parameters, title+" Grid Search" , save, n_jobs)
-#   grid_search_with_param(model, consolidated_feature_2_0_8, parameters, title+" Grid Search 0.8" , save, n_jobs)
-#   grid_search_with_param(model, consolidated_feature_2_0_6, parameters, title+" Grid Search 0.6" , save, n_jobs)
-#   grid_search_with_param(model, consolidated_feature_2_0_4, parameters, title+" Grid Search 0.4" , save, n_jobs)
-#   grid_search_with_param(model, consolidated_feature_2_0_2, parameters, title+" Grid Search 0.2" , save, n_jobs)
+for title, model in models.items():
+    grid_search_with_param(model, feature_2, parameters['MultinomialNB'], title+" Grid Search" , n_components, folds,  save, n_jobs, verbose=2)
+    #grid_search_with_param(model, consolidated_feature_2_0_8, parameters, title+" Grid Search 0.8" , save, folds, n_jobs)
+    #grid_search_with_param(model, consolidated_feature_2_0_6, parameters, title+" Grid Search 0.6" , save, folds, n_jobs)
+    #grid_search_with_param(model, consolidated_feature_2_0_4, parameters, title+" Grid Search 0.4" , save, folds, n_jobs)
+    #grid_search_with_param(model, consolidated_feature_2_0_2, parameters, title+" Grid Search 0.2" , save, folds, n_jobs)
