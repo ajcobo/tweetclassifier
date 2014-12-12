@@ -210,7 +210,7 @@ parameters =  {
         ],
         'MultinomialNB': [
             dict(
-                #classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                #classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
                 classifier__alpha=[0.01, 0.05],
                 classifier__fit_prior =[True, False]
             )
@@ -241,7 +241,7 @@ parameters =  {
 }
 
 base_params = {
-    'save': False,
+    'save': True,
     'folds': 5,
     'n_jobs': -1,
     'dataset': feature_2,
@@ -249,7 +249,8 @@ base_params = {
     'noise_train': True,
     'noise_test': False,
     'verbose': 2,
-    'parameters': parameters
+    'parameters': parameters,
+    'n_components': 10
 }
 base_params = dotdict(base_params)
 
@@ -257,5 +258,6 @@ for title, model in models.items():
     base_params['model']=model
     for noise_proportion in noise_proportions:
         base_params['noise_proportion']=noise_proportion
-        base_params['text']= title+" Grid Search"
+        base_params['text']= title+" Grid Search " + str(noise_proportion)
+        base_params['parameters']=parameters['MultinomialNB']
         grid_search_with_param(base_params)

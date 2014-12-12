@@ -16,6 +16,7 @@ from nltk.stem import SnowballStemmer
 import datetime
 from pprint import pprint
 import string
+import UnbalancedDataset as UD
 
 #Regexp
 import re
@@ -112,13 +113,6 @@ def join_datasets_by_proportion(dataset, noiseset, noise_proportion):
     #dataset_train_length = int(len(dataset[0])*train_proportion)
     X = np.concatenate([dataset[0],noiseset[0]])
     y = np.concatenate([dataset[1],noiseset[1]])
-
-    #Balance sets
-    needed_percentage_sampling = 0.5*100/(sum(dataset[1])/len(dataset[1]))
-    #rounding needed
-    needed_percentage_sampling = round(needed_percentage_sampling/100)*100
-
-    SMOTE(X, needed_percentage_sampling, 5)
 
     finalset = X, y, remaining_noise
 
@@ -261,14 +255,21 @@ def grid_search_pca(model, dataset, parameters):
 def grid_search_with_param(params):
     X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
 
-    text_clf = main_pipeline(params.model, n_components=params.n_components)
+
+    #balancing features
+    X_train, y_train, resulting_pipeline = adjust_features(X_train, y_train, n_components=params.n_components)
+
+    X_test = resulting_pipeline.transform(X_test)
+
+
+    text_clf = model_pipeline(params.model)
 
     gs = grid_search.GridSearchCV(text_clf, params.parameters, cv=params.folds, n_jobs=params.n_jobs, verbose=params.verbose)
     resulting_model = gs.fit(X_train,y_train)
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print_grid_search_report(X_test, y_test, resulting_model, prediction, params.text, params.save)
+    print_report(X_test, y_test, resulting_model, prediction, params.text, params.save)
 
 def train_fixed_param(params):
     X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
@@ -372,7 +373,7 @@ def fixed_pipeline(model, n_components):
                     ('classifier', model)])
     return pipeline
 
-def main_pipeline(model, n_components=100):
+def main_pipeline(model, n_components=100, ratio=1):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
@@ -388,6 +389,39 @@ def main_pipeline(model, n_components=100):
                         ])),
                         ('classifier', model)])
     return pipeline
+
+def adjust_features(X, y, n_components=100):
+    #Text vectorization using text processing
+    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
+
+    pipeline = FeatureUnion([
+                            ('text', Pipeline([
+                                ('extract', ColumnExtractor([...,0])),
+                                ('vectorize', vectorizer),
+                                ('reduce_dim', TruncateLDA(num_topics = n_components))
+                            ])),
+                            ('no_text', Pipeline([
+                                ('extract', ColumnExtractor([...,slice(1,None,None)], datatype=np.float64))
+                            ]))
+                        ])
+    result_pipeline = pipeline.fit(X,y)
+
+    X = result_pipeline.transform(X)
+    #raction of the number of minority samples to synthetically generate.
+    # For 0.5
+    ratio = (2*(len(y)-sum(y)) - len(y))/sum(y)
+
+    balance_model = UD.bSMOTE1(ratio=ratio)
+
+    X,y = balance_model.fit_transform(X,y)
+
+    return X, y, result_pipeline
+
+
+def model_pipeline(model):
+    pipeline = Pipeline([('classifier', model)])
+    return pipeline
+
 def text_pipeline(model, n_components=100):
     #Text vectorization using text processing
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
@@ -402,57 +436,3 @@ def text_pipeline(model, n_components=100):
 
 
 
-'''
-@author: karsten
-This is an implementation of the SMOTE Algorithm.
-See: "SMOTE: synthetic minority over-sampling technique" by
-Chawla, N.V et al.
-'''
-from random import randrange, choice
-from sklearn.neighbors import NearestNeighbors
-
-def SMOTE(T, N, k):
-    """
-    Returns (N/100) * n_minority_samples synthetic minority samples.
-    Parameters
-    ----------
-    T : array-like, shape = [n_minority_samples, n_features]
-        Holds the minority samples
-    N : percetange of new synthetic samples:
-        n_synthetic_samples = N/100 * n_minority_samples. Can be < 100.
-    k : int. Number of nearest neighbours.
-    Returns
-    -------
-    S : array, shape = [(N/100) * n_minority_samples, n_features]
-    """
-    n_minority_samples, n_features = T.shape
-
-    if N < 100:
-        #create synthetic samples only for a subset of T.
-        #TODO: select random minortiy samples
-        N = 100
-        pass
-
-    if (N % 100) != 0:
-        raise ValueError("N must be < 100 or multiple of 100")
-
-    N = N/100
-    n_synthetic_samples = N * n_minority_samples
-    S = np.zeros(shape=(n_synthetic_samples, n_features))
-
-    #Learn nearest neighbours
-    neigh = NearestNeighbors(n_neighbors = k)
-    neigh.fit(T)
-
-    #Calculate synthetic samples
-    for i in xrange(n_minority_samples):
-        nn = neigh.kneighbors(T[i], return_distance=False)
-        for n in xrange(N):
-            nn_index = choice(nn[0])
-            #NOTE: nn includes T[i], we don't want to select it
-            while nn_index == i:
-                nn_index = choice(nn[0])
-
-            dif = T[nn_index] - T[i]
-            gap = np.random.random()
-            S[n + i * N, :] = T[i,:] + gap * dif[:]

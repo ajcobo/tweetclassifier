@@ -4,6 +4,7 @@ import numpy as np
 from gensim import matutils
 from gensim.models import ldamulticore, ldamodel
 
+
 class ColumnExtractor(BaseEstimator, TransformerMixin):
     datatype = None
 
@@ -52,9 +53,31 @@ class TruncateLDA(BaseEstimator, TransformerMixin):
         doc_topic = np.asarray(raw_docs)[:,:,1]
         return doc_topic.astype(np.float64)
 
+# class OverSample(BaseEstimator, TransformerMixin):
+#     def __init__(self, k=5):
+#         self.k = k
+    
+#     def fit_transform(self, X, y=None):
+#         #balance set
+#         needed_percentage_sampling = 0.5*100/(sum(y)/len(y))
+#         #rounding needed
+#         needed_percentage_sampling = round(needed_percentage_sampling/100)*100
+#         X_minority, y_minority = 0
+#         additional_samples = SMOTE([X_minority, y_minority], needed_percentage_sampling, self.k)
+
+#         #join additional samples.
+#         return X
+#     def transform(self, X):
+#         return X
+    
+#     def fit(self, X, y=None):
+#         self.fit_transform(X)
+#         return self
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     def __getattr__(self, attr):
         return self.get(attr)
     __setattr__= dict.__setitem__
     __delattr__= dict.__delitem__
+

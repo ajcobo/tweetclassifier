@@ -11,7 +11,7 @@ import csv
 def print_report(X_test, y_test, resulting_model, prediction, text, save = False):
     print_results(X_test, y_test, resulting_model, prediction, text, save)
     if save:
-        save_results(resulting_model,y_test,prediction, text)
+        save_results(resulting_model, X_test, y_test, prediction, text)
 
 
 def print_cross_val_report(result, roc, title = "", save = False):
@@ -58,36 +58,36 @@ def predict_scores(model, X_test):
     subrequired= any([x for x in mlist if x == name])
     if hasattr(model.named_steps['classifier'], "decision_function"):
         if subrequired:
-            return model.decision_function(X_test)[:,1]
+            return model.named_steps['classifier'].decision_function(X_test)[:,1]
         else:
-            return model.decision_function(X_test).astype(np.float64)
+            return model.named_steps['classifier'].decision_function(X_test).astype(np.float64)
     else:
         if subrequired:
-            return model.predict_proba(X_test)[:,1]
+            return model.named_steps['classifier'].predict_proba(X_test)[:,1]
         else:
-            return model.predict_proba(X_test).astype(np.float64)
+            return model.named_steps['classifier'].predict_proba(X_test).astype(np.float64)
 
 def predict_single_scores(model, X_test):
     if hasattr(model.named_steps['classifier'], "predict_proba"):
         return model.predict_proba(X_test)[:,1]
     else:
-        if (model.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
+        if (model.__class__.__name__ == 'RandomForestClassifier'):
             return model.decision_function(X_test)[:,1]
         else:
             return model.decision_function(X_test).astype(np.float64)
 
 
 def grid_search_predict_scores(model, X_test):
-    if hasattr(model.best_estimator_.named_steps, "decision_function"):
+    if hasattr(model.best_estimator_.named_steps['classifier'], "decision_function"):
         if (model.best_estimator_.named_steps['classifier'].__class__.__name__== 'RandomForestClassifier'):
-            return model.best_estimator_.decision_function(X_test)[:,1]
+            return model.best_estimator_.named_steps['classifier'].decision_function(X_test)[:,1]
         else:
-            return model.best_estimator_.decision_function(X_test).astype(np.float64)
+            return model.best_estimator_.named_steps['classifier'].decision_function(X_test).astype(np.float64)
     else:
-        if (model.best_estimator_.named_steps['classifier'].__class__.__name__ == 'RandomForestClassifier'):
-            return model.best_estimator_.predict_proba(X_test)[:,1]
+        if (model.best_estimator_.__class__.__name__ == 'RandomForestClassifier'):
+            return model.best_estimator_.named_steps['classifier'].predict_proba(X_test)[:,1]
         else:
-            return model.best_estimator_.predict_proba(X_test)
+            return model.best_estimator_.named_steps['classifier'].predict_proba(X_test)
 
 def save_model(model, title):
     joblib.dump(model, title+'.pkl', compress=9)
@@ -99,26 +99,29 @@ def save_results(resulting_model, X_test, y_test, prediction, text):
     prf = metrics.precision_recall_fscore_support(y_test, prediction)
     acc = metrics.accuracy_score(y_test,prediction)
 
-    with open('test.csv', 'w', newline='') as fp:
-        a = csv.writer(fp, delimiter=',')
-        params = []
-        data = [['precision', prf[0][1]],
-                ['recall', prf[1][1]],
-                ['fscore', prf[2][1]],
-                ['accuracy', acc],
-                ['roc', roc_auc]]
-        a.writerows(params)
-        a.writerows(data)
+    with open(text+'.csv', 'w', newline='') as fp:
+        writer = csv.writer(fp, delimiter=',')
+        params = resulting_model.best_params_
+        data = {'title': text,
+                'precision': prf[0][1],
+                'recall': prf[1][1],
+                'fscore': prf[2][1],
+                'accuracy': acc,
+                'roc': roc_auc}
+        for key, value in params.items():
+            writer.writerow([key, value])
+        for key, value in data.items():
+            writer.writerow([key, value])
 
-        if (resulting_model.best_estimator_.named_steps['classifier'].__class__.__name__ == 'LogisticRegression'):
-            a.writerow('Interpreted Weights')
+        if (resulting_model.best_estimator_.__class__.__name__ == 'LogisticRegression'):
+            writer.writerow(['Interpreted Weights', ''])
             np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
-            a.writerows(np.exp( resulting_model.best_estimator_.named_steps['classifier'].coef_))
+            writer.writerows(np.exp( resulting_model.best_estimator_.coef_))
 
 def print_results(X_test, y_test, resulting_model, prediction, text, save):
     print(resulting_model.best_params_)
     print(text)
     print(metrics.classification_report(y_test, prediction))
     print('accuracy '+str(metrics.accuracy_score(y_test,prediction)))
-    predicted_scores = predict_scores(resulting_model, X_test)
+    predicted_scores = predict_scores(resulting_model.best_estimator_, X_test)
     plot_roc(y_test, predicted_scores, text, save)
