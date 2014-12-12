@@ -54,19 +54,4 @@ def add_noise_time_gap(dataframe, event_date, base_first_date):
 
   return dataframe
 
-# Assuming that the order does not matter, it separates training and test set proportionally so the noise
-# and therefore both of the classes are in both sets
-def join_datasets_by_proportion(dataset, noiseset, noise_proportion, train_proportion):
-  #Proportion of noise
-  noise_max_index = int(len(dataset[0])*noise_proportion/(1-noise_proportion))
-  noiseset = noiseset[0][:noise_max_index], noiseset[1][:noise_max_index]
 
-  #Combine datasets
-  noise_train_length = int(len(noiseset[0])*train_proportion)
-  dataset_train_length = int(len(dataset[0])*train_proportion)
-  X = np.concatenate([dataset[0][:dataset_train_length],noiseset[0][:noise_train_length],dataset[0][dataset_train_length:],noiseset[0][noise_train_length:]])
-  y = np.concatenate([dataset[1][:dataset_train_length],noiseset[1][:noise_train_length],dataset[1][dataset_train_length:],noiseset[1][noise_train_length:]])
-  finalset = X, y
-
-  return finalset
-  

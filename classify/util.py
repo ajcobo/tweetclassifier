@@ -51,3 +51,10 @@ class TruncateLDA(BaseEstimator, TransformerMixin):
         raw_docs = [model.__getitem__(doc, eps=0) for doc in corpus]
         doc_topic = np.asarray(raw_docs)[:,:,1]
         return doc_topic.astype(np.float64)
+
+class dotdict(dict):
+    """dot.notation access to dictionary attributes"""
+    def __getattr__(self, attr):
+        return self.get(attr)
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__

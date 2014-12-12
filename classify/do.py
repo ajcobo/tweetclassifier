@@ -1,6 +1,7 @@
 from load import *
 from clean import *
 from func import *
+from util import *
 
 from sklearn import svm, ensemble, linear_model, naive_bayes
 
@@ -42,29 +43,6 @@ noise_feature_3 = [noiseset.features[columns_noise_feature_3].values, noiseset.f
 noise_feature_4 = [noiseset.features[columns_noise_feature_4].values, noiseset.features['value'].values]
 noise_text = [noiseset.features['text'].values, noiseset.features['value'].values]
 
-consolidated_feature_1_0_8 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.8, train_proportion = 0.8)
-consolidated_feature_2_0_8 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.8, train_proportion = 0.8)
-consolidated_feature_3_0_8 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.8, train_proportion = 0.8)
-consolidated_feature_4_0_8 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.8, train_proportion = 0.8)
-consolidated_feature_text_0_8 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.8, train_proportion = 0.8)
-
-consolidated_feature_1_0_6 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.6, train_proportion = 0.8)
-consolidated_feature_2_0_6 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.6, train_proportion = 0.8)
-consolidated_feature_3_0_6 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.6, train_proportion = 0.8)
-consolidated_feature_4_0_6 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.6, train_proportion = 0.8)
-consolidated_feature_text_0_6 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.6, train_proportion = 0.8)
-
-consolidated_feature_1_0_4 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.4, train_proportion = 0.8)
-consolidated_feature_2_0_4 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.4, train_proportion = 0.8)
-consolidated_feature_3_0_4 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.4, train_proportion = 0.8)
-consolidated_feature_4_0_4 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.4, train_proportion = 0.8)
-consolidated_feature_text_0_4 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.4, train_proportion = 0.8)
-
-consolidated_feature_1_0_2 = join_datasets_by_proportion(dataset = feature_1, noiseset = noise_feature_1, noise_proportion = 0.2, train_proportion = 0.8)
-consolidated_feature_2_0_2 = join_datasets_by_proportion(dataset = feature_2, noiseset = noise_feature_2, noise_proportion = 0.2, train_proportion = 0.8)
-consolidated_feature_3_0_2 = join_datasets_by_proportion(dataset = feature_3, noiseset = noise_feature_3, noise_proportion = 0.2, train_proportion = 0.8)
-consolidated_feature_4_0_2 = join_datasets_by_proportion(dataset = feature_4, noiseset = noise_feature_4, noise_proportion = 0.2, train_proportion = 0.8)
-consolidated_feature_text_0_2 = join_datasets_by_proportion(dataset = total_text, noiseset = noise_text, noise_proportion = 0.2, train_proportion = 0.8)
 # Perform analysis
 
 # #train(svm.SVC(), test_feature)
@@ -158,11 +136,10 @@ consolidated_feature_text_0_2 = join_datasets_by_proportion(dataset = total_text
 #     #cross_val_train(model, feature_2, folds, metrics.classification_report, "Cross Validation "+title+", "+str(folds)+" folds "+str(n_component)+" dim", n_component, save)
 
 # Search
-save = True
+
 #n_components = [10,50,100,500,1000, 2000]
 n_components=10
-folds = 5
-n_jobs = -1
+noise_proportions=[0.0, 0.2, 0.4, 0.6, 0.8]
 models = {
           #'Logistic Regression': linear_model.LogisticRegression(),
           #'Random Forest': ensemble.RandomForestClassifier(),
@@ -233,7 +210,8 @@ parameters =  {
         ],
         'MultinomialNB': [
             dict(
-                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                #classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__alpha=[0.01, 0.05],
                 classifier__fit_prior =[True, False]
             )
         ],
@@ -262,9 +240,22 @@ parameters =  {
         ]
 }
 
+base_params = {
+    'save': False,
+    'folds': 5,
+    'n_jobs': -1,
+    'dataset': feature_2,
+    'noiseset': noise_feature_2,
+    'noise_train': True,
+    'noise_test': False,
+    'verbose': 2,
+    'parameters': parameters
+}
+base_params = dotdict(base_params)
+
 for title, model in models.items():
-    grid_search_with_param(model, feature_2, parameters['MultinomialNB'], title+" Grid Search" , n_components, folds,  save, n_jobs, verbose=2)
-    #grid_search_with_param(model, consolidated_feature_2_0_8, parameters, title+" Grid Search 0.8" , save, folds, n_jobs)
-    #grid_search_with_param(model, consolidated_feature_2_0_6, parameters, title+" Grid Search 0.6" , save, folds, n_jobs)
-    #grid_search_with_param(model, consolidated_feature_2_0_4, parameters, title+" Grid Search 0.4" , save, folds, n_jobs)
-    #grid_search_with_param(model, consolidated_feature_2_0_2, parameters, title+" Grid Search 0.2" , save, folds, n_jobs)
+    base_params['model']=model
+    for noise_proportion in noise_proportions:
+        base_params['noise_proportion']=noise_proportion
+        base_params['text']= title+" Grid Search"
+        grid_search_with_param(base_params)

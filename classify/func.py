@@ -84,14 +84,45 @@ word_re = re.compile(r"""(%s)""" % "|".join(regex_strings), re.VERBOSE | re.I | 
 
 # TRAINING
 
-def split_dataset(dataset):
+def split_dataset(dataset, noiseset=None, noise_proportion= 0.0, noise_train=False, noise_test=False):
     #Test and Training
     X, y = dataset
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     check_arrays(X,y)
     train_length = int(len(X)*0.8)
-    return(X[:train_length], X[train_length:], y[:train_length], y[train_length:])
+    X_base_train, X_base_test, y_base_train, y_base_test = X[:train_length], X[train_length:], y[:train_length], y[train_length:]
 
+    # Balance
+    if noiseset:
+        if noise_train:
+            X_base_train, y_base_train, noiseset = join_datasets_by_proportion([X_base_train,y_base_train], noiseset, noise_proportion)
+        if noise_test:
+            X_base_test, y_base_test, noiseset = join_datasets_by_proportion([X_base_test,y_base_test], noiseset, noise_proportion)
+
+    return(X_base_train, X_base_test, y_base_train, y_base_test)
+
+def join_datasets_by_proportion(dataset, noiseset, noise_proportion):
+    #Proportion of noise
+    noise_max_index = int(len(dataset[0])*noise_proportion/(1-noise_proportion))
+    noiseset = noiseset[0][:noise_max_index], noiseset[1][:noise_max_index]
+    remaining_noise = noiseset[0][noise_max_index:], noiseset[1][noise_max_index:]
+
+    #Combine datasets
+    #noise_train_length = int(len(noiseset[0])*train_proportion)
+    #dataset_train_length = int(len(dataset[0])*train_proportion)
+    X = np.concatenate([dataset[0],noiseset[0]])
+    y = np.concatenate([dataset[1],noiseset[1]])
+
+    #Balance sets
+    needed_percentage_sampling = 0.5*100/(sum(dataset[1])/len(dataset[1]))
+    #rounding needed
+    needed_percentage_sampling = round(needed_percentage_sampling/100)*100
+
+    SMOTE(X, needed_percentage_sampling, 5)
+
+    finalset = X, y, remaining_noise
+
+    return finalset
 # http://bogdan-ivanov.com/entry/recipe-text-clustering-using-nltk-and-scikit-learn/
 # Used to tokenize when constucting the vectorizer
 def process_text(text, stem=True, remove_links=True, punctuation_exception='#@'):
@@ -227,22 +258,22 @@ def grid_search_pca(model, dataset, parameters):
     print(metrics.classification_report(y_test, prediction))
     # print_report(X_test, y_test, resulting_model, prediction)
 
-def grid_search_with_param(model, dataset, parameters, text="",n_components=100, folds=5, save=False, n_jobs = -1, verbose=0):
-    X_train, X_test, y_train, y_test = split_dataset(dataset)
+def grid_search_with_param(params):
+    X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
 
-    text_clf = main_pipeline(model, n_components=n_components)
+    text_clf = main_pipeline(params.model, n_components=params.n_components)
 
-    gs = grid_search.GridSearchCV(text_clf, parameters, cv=folds, n_jobs=n_jobs, verbose=verbose)
+    gs = grid_search.GridSearchCV(text_clf, params.parameters, cv=params.folds, n_jobs=params.n_jobs, verbose=params.verbose)
     resulting_model = gs.fit(X_train,y_train)
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print_grid_search_report(X_test, y_test, resulting_model, prediction, text, save)
+    print_grid_search_report(X_test, y_test, resulting_model, prediction, params.text, params.save)
 
-def train_fixed_param(model, dataset, text, n_components=100, save = False):
-    X_train, X_test, y_train, y_test = split_dataset(dataset)
+def train_fixed_param(params):
+    X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
 
-    text_clf = main_pipeline(model, n_components)
+    text_clf = main_pipeline(params.model, params.n_components)
 
     #gs = grid_search.GridSearchCV(text_clf, parameters)
     resulting_model = text_clf.fit(X_train,y_train)
@@ -251,7 +282,7 @@ def train_fixed_param(model, dataset, text, n_components=100, save = False):
     # Output
     #print(resulting_model.best_params_)
     #print(metrics.classification_report(y_test, prediction))
-    print_report(X_test, y_test, resulting_model, prediction, text, save)
+    print_report(X_test, y_test, resulting_model, prediction, params.text, params.save)
 
 def train_text_fixed_param(model, dataset, text, n_components=100, save = False):
     X_train, X_test, y_train, y_test = split_dataset(dataset)
@@ -370,4 +401,58 @@ def text_pipeline(model, n_components=100):
     return pipeline
 
 
-#('reduce_dim', TruncatedSVD(n_components=n_components))
+
+'''
+@author: karsten
+This is an implementation of the SMOTE Algorithm.
+See: "SMOTE: synthetic minority over-sampling technique" by
+Chawla, N.V et al.
+'''
+from random import randrange, choice
+from sklearn.neighbors import NearestNeighbors
+
+def SMOTE(T, N, k):
+    """
+    Returns (N/100) * n_minority_samples synthetic minority samples.
+    Parameters
+    ----------
+    T : array-like, shape = [n_minority_samples, n_features]
+        Holds the minority samples
+    N : percetange of new synthetic samples:
+        n_synthetic_samples = N/100 * n_minority_samples. Can be < 100.
+    k : int. Number of nearest neighbours.
+    Returns
+    -------
+    S : array, shape = [(N/100) * n_minority_samples, n_features]
+    """
+    n_minority_samples, n_features = T.shape
+
+    if N < 100:
+        #create synthetic samples only for a subset of T.
+        #TODO: select random minortiy samples
+        N = 100
+        pass
+
+    if (N % 100) != 0:
+        raise ValueError("N must be < 100 or multiple of 100")
+
+    N = N/100
+    n_synthetic_samples = N * n_minority_samples
+    S = np.zeros(shape=(n_synthetic_samples, n_features))
+
+    #Learn nearest neighbours
+    neigh = NearestNeighbors(n_neighbors = k)
+    neigh.fit(T)
+
+    #Calculate synthetic samples
+    for i in xrange(n_minority_samples):
+        nn = neigh.kneighbors(T[i], return_distance=False)
+        for n in xrange(N):
+            nn_index = choice(nn[0])
+            #NOTE: nn includes T[i], we don't want to select it
+            while nn_index == i:
+                nn_index = choice(nn[0])
+
+            dif = T[nn_index] - T[i]
+            gap = np.random.random()
+            S[n + i * N, :] = T[i,:] + gap * dif[:]
