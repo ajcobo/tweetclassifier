@@ -153,7 +153,7 @@ models = {
           #'SGDClassifier': linear_model.SGDClassifier()
 }
 parameters =  {
-        'Linear Regression':[
+        'Logistic Regression':[
             dict(
                 classifier__C=[2**x for x in range(-5,15)],
                 classifier__penalty=['l1', 'l2'],
