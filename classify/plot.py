@@ -57,7 +57,7 @@ def plot_roc(test, score, params):
 def plot_precision_recall(test, score, params):
     # Just lazyness in not refactoring everything for the text_file
     precision, recall, _ = metrics.precision_recall_curve(test, score)
-    title = 'Precision-Recall' + params.text
+    title = 'Precision-Recall ' + params.text
     plt.clf()
     plt.plot(recall, precision, label='Precision-Recall curve')
     plt.xlabel('Recall')
