@@ -210,7 +210,7 @@ parameters =  {
         ],
         'MultinomialNB': [
             dict(
-                classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
                 #classifier__alpha=[0.01, 0.05],
                 classifier__fit_prior =[True, False]
             )
@@ -218,7 +218,7 @@ parameters =  {
         #'GaussianNB': [],
         'BernoulliNB': [
             dict(
-                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
                 classifier__binarize=[True, False],
                 classifier__fit_prior =[True, False]
             )
