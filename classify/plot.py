@@ -8,10 +8,10 @@ from sklearn import metrics, cross_validation
 from sklearn.externals import joblib
 import csv
 
-def print_report(X_test, y_test, resulting_model, prediction, text, save = False):
-    print_results(X_test, y_test, resulting_model, prediction, text, save)
-    if save:
-        save_results(resulting_model, X_test, y_test, prediction, text)
+def print_report(X_test, y_test, resulting_model, prediction, params):
+    print_results(X_test, y_test, resulting_model, prediction, params)
+    if params.save:
+        save_results(resulting_model, X_test, y_test, prediction, params)
 
 
 def print_cross_val_report(result, roc, title = "", save = False):
@@ -32,11 +32,12 @@ def get_roc_auc(test, score):
     roc_auc = metrics.auc(fpr, tpr)
     return(roc_auc)
 
-def plot_roc(test, score, title="", save = False):
+def plot_roc(test, score, params):
     # Just lazyness in not refactoring everything for the text_file
     fpr, tpr, _ = metrics.roc_curve(test, score)
     roc_auc = metrics.auc(fpr, tpr)
     print("roc %0.6f" % roc_auc)
+    title = 'Receiver operating characteristic ' + params.text
     # Plot of a ROC curve
     plt.figure()
     plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
@@ -45,10 +46,30 @@ def plot_roc(test, score, title="", save = False):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic ' + title)
+    plt.title(title)
     plt.legend(loc="lower right")
-    if save:
+    if params.save:
         plt.savefig(title+'.png')
+        np.savetxt(title+'.csv',(fpr, tpr), delimiter=',')
+    else:
+        plt.show()
+
+def plot_precision_recall(test, score, params):
+    # Just lazyness in not refactoring everything for the text_file
+    precision, recall, _ = metrics.precision_recall_curve(test, score)
+    title = 'Precision-Recall' + params.text
+    plt.clf()
+    plt.plot(recall, precision, label='Precision-Recall curve')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title(title)
+    plt.legend(loc="lower right")
+    plt.show()
+    if params.save:
+        plt.savefig(title+'.png')
+        np.savetxt(title+'.csv',(precision, recall), delimiter=',')
     else:
         plt.show()
 
@@ -89,26 +110,33 @@ def grid_search_predict_scores(model, X_test):
         else:
             return model.best_estimator_.named_steps['classifier'].predict_proba(X_test)
 
-def save_model(model, title):
-    joblib.dump(model, title+'.pkl', compress=9)
+def save_model(model, params):
+    joblib.dump(model, params.text+'.pkl', compress=9)
 
-def save_results(resulting_model, X_test, y_test, prediction, text):
-    save_model(resulting_model.best_estimator_, text)
+def save_results(resulting_model, X_test, y_test, prediction, params):
+    save_model(resulting_model.best_estimator_, params)
     predicted_scores = predict_scores(resulting_model.best_estimator_, X_test)
     roc_auc = get_roc_auc(y_test, predicted_scores)
     prf = metrics.precision_recall_fscore_support(y_test, prediction)
     acc = metrics.accuracy_score(y_test,prediction)
 
-    with open(text+'.csv', 'w', newline='') as fp:
+    with open(params.text+'.csv', 'w', newline='') as fp:
         writer = csv.writer(fp, delimiter=',')
-        params = resulting_model.best_params_
-        data = {'title': text,
-                'precision': prf[0][1],
+        best_params = resulting_model.best_params_
+        data = {'precision': prf[0][1],
                 'recall': prf[1][1],
                 'fscore': prf[2][1],
                 'accuracy': acc,
                 'roc': roc_auc}
-        for key, value in params.items():
+        
+        #remove what we dont want
+        temp_params = dict(params)
+        for key in ('dataset', 'noiseset', 'save'):
+            if key in temp_params:
+                del temp_params[key]
+        for key, value in temp_params.items():
+            writer.writerow([key, value])
+        for key, value in best_params.items():
             writer.writerow([key, value])
         for key, value in data.items():
             writer.writerow([key, value])
@@ -118,10 +146,11 @@ def save_results(resulting_model, X_test, y_test, prediction, text):
             np.set_printoptions(formatter= {'float_kind':'{:14f}'.format})
             writer.writerows(np.exp( resulting_model.best_estimator_.coef_))
 
-def print_results(X_test, y_test, resulting_model, prediction, text, save):
+def print_results(X_test, y_test, resulting_model, prediction, params):
     print(resulting_model.best_params_)
-    print(text)
+    print(params.text)
     print(metrics.classification_report(y_test, prediction))
     print('accuracy '+str(metrics.accuracy_score(y_test,prediction)))
     predicted_scores = predict_scores(resulting_model.best_estimator_, X_test)
-    plot_roc(y_test, predicted_scores, text, save)
+    plot_roc(y_test, predicted_scores, params)
+    plot_precision_recall(y_test, predicted_scores, params)

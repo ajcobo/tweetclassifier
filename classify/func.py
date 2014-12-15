@@ -257,7 +257,7 @@ def grid_search_with_param(params):
 
 
     #balancing features
-    X_train, y_train, resulting_pipeline = adjust_features(X_train, y_train, n_components=params.n_components)
+    X_train, y_train, resulting_pipeline = adjust_features(X_train, y_train, n_components=params.n_component)
 
     X_test = resulting_pipeline.transform(X_test)
 
@@ -269,7 +269,7 @@ def grid_search_with_param(params):
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print_report(X_test, y_test, resulting_model, prediction, params.text, params.save)
+    print_report(X_test, y_test, resulting_model, prediction, params)
 
 def train_fixed_param(params):
     X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)

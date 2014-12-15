@@ -138,17 +138,16 @@ noise_text = [noiseset.features['text'].values, noiseset.features['value'].value
 # Search
 
 #n_components = [10,50,100,500,1000, 2000]
-n_components=10
-noise_proportions=[0.0, 0.2, 0.4, 0.6, 0.8]
+
 models = {
           #'Logistic Regression': linear_model.LogisticRegression(),
-          #'Random Forest': ensemble.RandomForestClassifier(),
+          'Random Forest': ensemble.RandomForestClassifier(),
           #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
           #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
           #'SVM Poly': svm.SVC(kernel='poly', verbose=False,degree=2, cache_size=2000),
           #'SVM Linear': svm.SVC(kernel='linear', verbose=False, cache_size=2000, probability=True),
           #'SVM Linear': svm.LinearSVC(dual=False),
-          'MultinomialNB': naive_bayes.MultinomialNB(),
+          #'MultinomialNB': naive_bayes.MultinomialNB(),
           #'GaussianNB': naive_bayes.GaussianNB(),
           #'BernoulliNB': naive_bayes.BernoulliNB(),
           #'SGDClassifier': linear_model.SGDClassifier()
@@ -167,10 +166,10 @@ parameters =  {
             dict(
                 classifier__criterion=["gini", "entropy"],
                 classifier__max_features=['auto', 'sqrt', 'log2', None],
-                classifier__max_depth=[2,3,4,5,6,7,8,9,10,None],
-                classifier__min_samples_split=[1,2,3,4,5,6,7,8,9,10],
-                classifier__min_samples_leaf=[1,2,3,4,5,6,7,8,9,10],
-                classifier__bootstrap=[True, False],
+                classifier__max_depth=[5,6,7,8,9,10,None],
+                classifier__min_samples_split=[1,2,3,4,5,6,7],
+                classifier__min_samples_leaf=[1,2,3,4],
+                #classifier__bootstrap=[True, False],
                 classifier__oob_score=[True, False]
             )
         ],
@@ -181,7 +180,7 @@ parameters =  {
                 #classifier__coef0=[min(1-min , 0),max(<x,y>)], not correct for tuning
                 classifier__probability=[True],
                 classifier__shrinking=[True, False],
-                classifier__dual=[False],
+                #classifier__dual=[False],
                 classifier__tol=[1e-02,1e-03,1e-04,1e-05],
             )
         ],
@@ -192,7 +191,7 @@ parameters =  {
                 #classifier__coef0=[min(1-min , 0),max(<x,y>)], not correct for tuning
                 classifier__probability=[True],
                 classifier__shrinking=[True, False],
-                classifier__dual=[False],
+                #classifier__dual=[False],
                 classifier__tol=[1e-02,1e-03,1e-04,1e-05],
             )
         ],
@@ -201,8 +200,9 @@ parameters =  {
                 classifier__C=[2**x for x in range(-5,15)],
                 #classifier__gamma=[2**x for x in range(-15,5)],
                 classifier__loss=['l1', 'l2'],
-                classifier__penalty=['l1', 'l2'],
-                classifier__dual=[False],
+                classifier__penalty=['l1'],
+                #Just L2, because l1 and l1 is ot permitted
+                #classifier__dual=[False],
                 classifier__tol=[1e-02,1e-03,1e-04,1e-05],
                 classifier__fit_intercept=[True, False],
                 classifier__intercept_scaling=[1,5,10,50,100,500,1000]
@@ -210,8 +210,8 @@ parameters =  {
         ],
         'MultinomialNB': [
             dict(
-                #classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
-                classifier__alpha=[0.01, 0.05],
+                classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                #classifier__alpha=[0.01, 0.05],
                 classifier__fit_prior =[True, False]
             )
         ],
@@ -250,14 +250,24 @@ base_params = {
     'noise_test': False,
     'verbose': 2,
     'parameters': parameters,
-    'n_components': 10
+    
 }
+noise_proportions=[#0.0, 
+                   0.2, 
+                   0.4,
+                   0.6, 
+                   0.8]
+n_components= [10,50,100,500,1000,2000]
 base_params = dotdict(base_params)
 
 for title, model in models.items():
     base_params['model']=model
     for noise_proportion in noise_proportions:
-        base_params['noise_proportion']=noise_proportion
-        base_params['text']= title+" Grid Search " + str(noise_proportion)
-        base_params['parameters']=parameters['MultinomialNB']
-        grid_search_with_param(base_params)
+            for n_component in n_components:
+                base_params['noise_proportion']=noise_proportion
+                base_params['text']= title+" Grid Search Noise " + str(noise_proportion) + " LDA "+str(n_component)
+                base_params['parameters']=parameters[title]
+                base_params['title']=title
+                base_params['noise']=noise_proportion
+                base_params['n_component']=n_component
+                grid_search_with_param(base_params)
