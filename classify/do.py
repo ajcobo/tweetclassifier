@@ -202,11 +202,8 @@ parameters =  {
                 classifier__loss=['l1', 'l2'],
                 classifier__penalty=['l2'],
                 #Just L2, because l1 and l1 is ot permitted
-<<<<<<< HEAD
                 classifier__dual=[True],
-=======
                 #classifier__dual=[False],
->>>>>>> a3c7926f26f0f810a7adf7592088023b48377a11
                 classifier__tol=[1e-02,1e-03,1e-04],
                 classifier__fit_intercept=[True, False],
                 classifier__intercept_scaling=[1,5,10,50,100,500,1000]
