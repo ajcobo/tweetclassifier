@@ -153,13 +153,13 @@ models = {
           #'SGDClassifier': linear_model.SGDClassifier()
 }
 parameters =  {
-        'Linear Regression':[
+        'Logistic Regression':[
             dict(
                 classifier__C=[2**x for x in range(-5,15)],
                 classifier__penalty=['l1', 'l2'],
-                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__tol=[1e-02,1e-03,1e-04],
                 classifier__fit_intercept=[True, False],
-                classifier__intercept_scaling=[1,5,10,50,100,500,1000]
+                classifier__intercept_scaling=[1,10,100,1000]
             )
         ],
         'Random Forest':[
@@ -181,7 +181,7 @@ parameters =  {
                 classifier__probability=[True],
                 classifier__shrinking=[True, False],
                 #classifier__dual=[False],
-                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__tol=[1e-02,1e-03,1e-04],
             )
         ],
         'SVM RBF': [
@@ -192,7 +192,7 @@ parameters =  {
                 classifier__probability=[True],
                 classifier__shrinking=[True, False],
                 #classifier__dual=[False],
-                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__tol=[1e-02,1e-03,1e-04],
             )
         ],
         'SVM Linear': [
@@ -200,10 +200,10 @@ parameters =  {
                 classifier__C=[2**x for x in range(-5,15)],
                 #classifier__gamma=[2**x for x in range(-15,5)],
                 classifier__loss=['l1', 'l2'],
-                classifier__penalty=['l1'],
+                classifier__penalty=['l2'],
                 #Just L2, because l1 and l1 is ot permitted
-                #classifier__dual=[False],
-                classifier__tol=[1e-02,1e-03,1e-04,1e-05],
+                classifier__dual=[True],
+                classifier__tol=[1e-02,1e-03,1e-04],
                 classifier__fit_intercept=[True, False],
                 classifier__intercept_scaling=[1,5,10,50,100,500,1000]
             )
@@ -225,17 +225,17 @@ parameters =  {
         ],
         'SGDClassifier': [
             dict(
-                 classifier__loss=['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive'],
+                 classifier__loss=['hinge', 'log', 'modified_huber', 'huber', 'epsilon_insensitive'],
                  classifier__penalty=['l1', 'l2', 'elasticnet'],
-                 classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
-                 classifier__l1_ratio=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                 classifier__alpha=[0.01, 0.1, 0.5, 1],
+                 classifier__l1_ratio=[0.01, 0.1, 0.5, 1],
                  classifier__fit_intercept=[True, False],
                  classifier__n_iter=[3,4,5,6,7],
                  classifier__shuffle=[True, False],
-                 classifier__epsilon=[1e-01, 1e-02,1e-03,1e-04,1e-05],
+                 classifier__epsilon=[1e-01, 1e-02,1e-03,1e-04],
                  #classifier__learning_rate default is optimal
                  #classifier__eta0
-                 classifier__power_t=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1]
+                 classifier__power_t=[0.01, 0.1, 0.5, 1]
             )
         ]
 }
@@ -253,21 +253,27 @@ base_params = {
     
 }
 noise_proportions=[#0.0, 
-                   0.2, 
+                   #0.2, 
                    0.4,
-                   0.6, 
-                   0.8]
-n_components= [10,50,100,500,1000,2000]
+                   #0.6, 
+                   #0.8
+                   ]
+n_components= [#10,
+               #50,
+               #100,
+               #500,
+               #1000,
+               2000]
 base_params = dotdict(base_params)
 
 for title, model in models.items():
     base_params['model']=model
     for noise_proportion in noise_proportions:
             for n_component in n_components:
-                base_params['noise_proportion']=noise_proportion
-                base_params['text']= title+" Grid Search Noise " + str(noise_proportion) + " LDA "+str(n_component)
-                base_params['parameters']=parameters[title]
-                base_params['title']=title
-                base_params['noise']=noise_proportion
-                base_params['n_component']=n_component
-                grid_search_with_param(base_params)
+              base_params['noise_proportion']=noise_proportion
+              base_params['text']= title+" Grid Search Noise " + str(noise_proportion) + " LDA "+str(n_component)
+              base_params['parameters']=parameters[title]
+              base_params['title']=title
+              base_params['noise']=noise_proportion
+              base_params['n_component']=n_component
+              grid_search_with_param(base_params)

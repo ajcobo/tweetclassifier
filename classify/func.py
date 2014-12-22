@@ -209,48 +209,24 @@ def train_text_lsa(model, dataset, n_components = 100):
     # Output
     print_report(X_test_vectorized, y_test, resulting_model, prediction)
 
-def grid_search_lsa(model, dataset, parameters, description=""):
-    X_train, X_test, y_train, y_test = split_dataset(dataset)
+def grid_search_with_text(params):
+    X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
 
-    #Text vectorization using text processing
-    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
-    text_clf = Pipeline([('extract', ColumnExtractor([...,0])),
-                         ('vectorizer', vectorizer),
-                         ('reduce_dim', TruncatedSVD()),
-                         ('clf', model)])
+    #balancing features
+    X_train, y_train, resulting_pipeline = ajust_text_features(X_train, y_train)
 
-    # n_jobs = -1 just in executable
-    gs = grid_search.GridSearchCV(text_clf, parameters)
+    X_test = resulting_pipeline.transform(X_test)
 
+
+    text_clf = model_pipeline(params.model)
+
+    gs = grid_search.GridSearchCV(text_clf, params.parameters, cv=params.folds, n_jobs=params.n_jobs, verbose=params.verbose)
     resulting_model = gs.fit(X_train,y_train)
     prediction = resulting_model.predict(X_test)
 
     # Output
-    print(resulting_model.best_params_)
-    print(metrics.classification_report(y_test, prediction))
-    print_report(X_test, y_test, resulting_model, prediction)
-
-def grid_search_pca(model, dataset, parameters):
-    X_train, X_test, y_train, y_test = split_dataset(dataset)
-
-    #Text vectorization using text processing
-    vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
-
-    text_clf = Pipeline([('vectorizer', vectorizer),
-                         ('reduce_dim', PCA()),
-                         ('clf', model)])
-
-    # n_jobs = -1 just in executable
-    gs = grid_search.GridSearchCV(text_clf, parameters)
-    
-    resulting_model = gs.fit(X_train,y_train)
-    prediction = resulting_model.predict(X_test)
-
-    # Output
-    print(resulting_model.best_params_)
-    print(metrics.classification_report(y_test, prediction))
-    # print_report(X_test, y_test, resulting_model, prediction)
+    print_report(X_test, y_test, resulting_model, prediction, params)
 
 def grid_search_with_param(params):
     X_train, X_test, y_train, y_test = split_dataset(params.dataset, params.noiseset, params.noise_proportion, params.noise_train, params.noise_test)
@@ -422,17 +398,27 @@ def model_pipeline(model):
     pipeline = Pipeline([('classifier', model)])
     return pipeline
 
-def text_pipeline(model, n_components=100):
-    #Text vectorization using text processing
+def ajust_text_features(X,y):
+
     vectorizer = TfidfVectorizer(tokenizer=process_text, stop_words=stopwords.words('spanish'), min_df=1, lowercase=True, strip_accents='unicode')
 
-    pipeline = Pipeline([('features', FeatureUnion([
+    pipeline = FeatureUnion([
                             ('text', Pipeline([
-                                ('vectorize', vectorizer)
-                            ]))
-                        ])),
-                        ('classifier', model)])
-    return pipeline
+                                ('extract', ColumnExtractor([...,0])),
+                                ('vectorize', vectorizer),
+                            ])),
+                        ])
+    result_pipeline = pipeline.fit(X,y)
 
+    X = result_pipeline.transform(X)
+    #raction of the number of minority samples to synthetically generate.
+    # For 0.5
+    ratio = (2*(len(y)-sum(y)) - len(y))/sum(y)
+
+    balance_model = UD.bSMOTE1(ratio=ratio)
+
+    X,y = balance_model.fit_transform(X,y)
+
+    return X, y, result_pipeline
 
 
