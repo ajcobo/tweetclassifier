@@ -202,7 +202,11 @@ parameters =  {
                 classifier__loss=['l1', 'l2'],
                 classifier__penalty=['l2'],
                 #Just L2, because l1 and l1 is ot permitted
+<<<<<<< HEAD
                 classifier__dual=[True],
+=======
+                #classifier__dual=[False],
+>>>>>>> a3c7926f26f0f810a7adf7592088023b48377a11
                 classifier__tol=[1e-02,1e-03,1e-04],
                 classifier__fit_intercept=[True, False],
                 classifier__intercept_scaling=[1,5,10,50,100,500,1000]
@@ -210,7 +214,7 @@ parameters =  {
         ],
         'MultinomialNB': [
             dict(
-                classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__alpha=[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
                 #classifier__alpha=[0.01, 0.05],
                 classifier__fit_prior =[True, False]
             )
@@ -218,7 +222,7 @@ parameters =  {
         #'GaussianNB': [],
         'BernoulliNB': [
             dict(
-                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1],
+                classifier__alpha=[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
                 classifier__binarize=[True, False],
                 classifier__fit_prior =[True, False]
             )
@@ -230,7 +234,7 @@ parameters =  {
                  classifier__alpha=[0.01, 0.1, 0.5, 1],
                  classifier__l1_ratio=[0.01, 0.1, 0.5, 1],
                  classifier__fit_intercept=[True, False],
-                 classifier__n_iter=[3,4,5,6,7],
+                 classifier__n_iter=[4,5,6],
                  classifier__shuffle=[True, False],
                  classifier__epsilon=[1e-01, 1e-02,1e-03,1e-04],
                  #classifier__learning_rate default is optimal
@@ -269,11 +273,11 @@ base_params = dotdict(base_params)
 for title, model in models.items():
     base_params['model']=model
     for noise_proportion in noise_proportions:
-            for n_component in n_components:
-              base_params['noise_proportion']=noise_proportion
-              base_params['text']= title+" Grid Search Noise " + str(noise_proportion) + " LDA "+str(n_component)
-              base_params['parameters']=parameters[title]
-              base_params['title']=title
-              base_params['noise']=noise_proportion
-              base_params['n_component']=n_component
-              grid_search_with_param(base_params)
+        for n_component in n_components:
+            base_params['noise_proportion']=noise_proportion
+            base_params['text']= title+" Grid Search Noise " + str(noise_proportion) + " LDA "+str(n_component)
+            base_params['parameters']=parameters[title]
+            base_params['title']=title
+            base_params['noise']=noise_proportion
+            base_params['n_component']=n_component
+            grid_search_with_param(base_params)
