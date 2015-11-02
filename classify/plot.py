@@ -111,7 +111,7 @@ def grid_search_predict_scores(model, X_test):
             return model.best_estimator_.named_steps['classifier'].predict_proba(X_test)
 
 def save_model(model, params):
-    joblib.dump(model, params.text+'.pkl', compress=9)
+    joblib.dump(model, params.text+'.pkl', compress=3)
 
 def save_results(resulting_model, X_test, y_test, prediction, params):
     save_model(resulting_model.best_estimator_, params)

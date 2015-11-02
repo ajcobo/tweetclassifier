@@ -3,6 +3,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 from gensim import matutils
 from gensim.models import ldamulticore, ldamodel
+# import logging
+# logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 class ColumnExtractor(BaseEstimator, TransformerMixin):

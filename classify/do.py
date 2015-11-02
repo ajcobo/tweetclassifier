@@ -140,7 +140,7 @@ noise_text = [noiseset.features['text'].values, noiseset.features['value'].value
 #n_components = [10,50,100,500,1000, 2000]
 
 models = {
-          #'Logistic Regression': linear_model.LogisticRegression(),
+          # 'Logistic Regression': linear_model.LogisticRegression(),
           'Random Forest': ensemble.RandomForestClassifier(),
           #'SVM Sigmoid': svm.SVC(kernel='sigmoid', probability=True),
           #'SVM RBF': svm.SVC(kernel='rbf', probability=True),
@@ -253,18 +253,19 @@ base_params = {
     'parameters': parameters,
     
 }
-noise_proportions=[#0.0, 
+noise_proportions=[#0.0,
                    #0.2, 
-                   0.4,
+                   #0.4,
                    #0.6, 
-                   #0.8
+                   0.8
                    ]
 n_components= [#10,
                #50,
                #100,
                #500,
                #1000,
-               2000]
+               2000
+               ]
 base_params = dotdict(base_params)
 
 for title, model in models.items():
